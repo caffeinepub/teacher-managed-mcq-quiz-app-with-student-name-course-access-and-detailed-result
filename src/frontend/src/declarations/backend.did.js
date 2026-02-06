@@ -13,6 +13,10 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const ChangePasswordResponse = IDL.Record({
+  'message' : IDL.Text,
+  'success' : IDL.Bool,
+});
 export const Question = IDL.Record({
   'id' : IDL.Text,
   'text' : IDL.Text,
@@ -49,51 +53,59 @@ export const Student = IDL.Record({
   'name' : IDL.Text,
   'course' : IDL.Text,
 });
+export const AdminActionResult = IDL.Record({
+  'message' : IDL.Text,
+  'success' : IDL.Bool,
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'createQuiz' : IDL.Func(
-      [IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(Question)],
-      [IDL.Text],
+  'changePassword' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text],
+      [ChangePasswordResponse],
       [],
     ),
-  'getAllAttempts' : IDL.Func([], [IDL.Vec(StudentAttempt)], ['query']),
-  'getAllQuizzes' : IDL.Func([], [IDL.Vec(Quiz)], ['query']),
+  'createQuiz' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(Question)],
+      [IDL.Opt(IDL.Text)],
+      [],
+    ),
+  'getAllAttempts' : IDL.Func([IDL.Text], [IDL.Vec(StudentAttempt)], []),
+  'getAllQuizzes' : IDL.Func([IDL.Text], [IDL.Vec(Quiz)], []),
   'getAttemptsByStudent' : IDL.Func(
-      [IDL.Text],
+      [IDL.Text, IDL.Text],
       [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(Answer)))],
-      ['query'],
+      [],
     ),
   'getAttemptsForStudent' : IDL.Func(
-      [IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Text, IDL.Text],
       [IDL.Vec(StudentAttempt)],
-      ['query'],
+      [],
     ),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getPublishedQuizzes' : IDL.Func([], [IDL.Vec(Quiz)], ['query']),
   'getQuiz' : IDL.Func([IDL.Text], [Quiz], ['query']),
   'getQuizResultsStats' : IDL.Func(
-      [IDL.Text],
+      [IDL.Text, IDL.Text],
       [
         IDL.Record({
           'attempts' : IDL.Vec(StudentAttempt),
           'attemptsByQuestion' : IDL.Vec(IDL.Tuple(IDL.Vec(Answer), IDL.Text)),
         }),
       ],
-      ['query'],
+      [],
     ),
   'getStudentAttemptsByQuizId' : IDL.Func(
-      [IDL.Text],
+      [IDL.Text, IDL.Text],
       [IDL.Vec(StudentAttempt)],
-      ['query'],
+      [],
     ),
-  'getTeacherQuizzes' : IDL.Func([], [IDL.Vec(Quiz)], ['query']),
+  'getTeacherQuizzes' : IDL.Func([IDL.Text], [IDL.Vec(Quiz)], []),
   'hasAttemptedQuiz' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'loginStudent' : IDL.Func([IDL.Text, IDL.Text], [Student], []),
-  'publishQuiz' : IDL.Func([IDL.Text], [], []),
-  'registerTeacher' : IDL.Func([IDL.Text], [], []),
+  'publishQuiz' : IDL.Func([IDL.Text, IDL.Text], [AdminActionResult], []),
   'submitQuizAttempt' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
       [
@@ -107,10 +119,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateQuiz' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(Question)],
-      [],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(Question)],
+      [AdminActionResult],
       [],
     ),
+  'verifyAdminPassword' : IDL.Func([IDL.Text], [IDL.Bool], []),
 });
 
 export const idlInitArgs = [];
@@ -120,6 +133,10 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const ChangePasswordResponse = IDL.Record({
+    'message' : IDL.Text,
+    'success' : IDL.Bool,
   });
   const Question = IDL.Record({
     'id' : IDL.Text,
@@ -157,32 +174,41 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'course' : IDL.Text,
   });
+  const AdminActionResult = IDL.Record({
+    'message' : IDL.Text,
+    'success' : IDL.Bool,
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'createQuiz' : IDL.Func(
-        [IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(Question)],
-        [IDL.Text],
+    'changePassword' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [ChangePasswordResponse],
         [],
       ),
-    'getAllAttempts' : IDL.Func([], [IDL.Vec(StudentAttempt)], ['query']),
-    'getAllQuizzes' : IDL.Func([], [IDL.Vec(Quiz)], ['query']),
+    'createQuiz' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(Question)],
+        [IDL.Opt(IDL.Text)],
+        [],
+      ),
+    'getAllAttempts' : IDL.Func([IDL.Text], [IDL.Vec(StudentAttempt)], []),
+    'getAllQuizzes' : IDL.Func([IDL.Text], [IDL.Vec(Quiz)], []),
     'getAttemptsByStudent' : IDL.Func(
-        [IDL.Text],
+        [IDL.Text, IDL.Text],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(Answer)))],
-        ['query'],
+        [],
       ),
     'getAttemptsForStudent' : IDL.Func(
-        [IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Text],
         [IDL.Vec(StudentAttempt)],
-        ['query'],
+        [],
       ),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getPublishedQuizzes' : IDL.Func([], [IDL.Vec(Quiz)], ['query']),
     'getQuiz' : IDL.Func([IDL.Text], [Quiz], ['query']),
     'getQuizResultsStats' : IDL.Func(
-        [IDL.Text],
+        [IDL.Text, IDL.Text],
         [
           IDL.Record({
             'attempts' : IDL.Vec(StudentAttempt),
@@ -191,19 +217,18 @@ export const idlFactory = ({ IDL }) => {
             ),
           }),
         ],
-        ['query'],
+        [],
       ),
     'getStudentAttemptsByQuizId' : IDL.Func(
-        [IDL.Text],
+        [IDL.Text, IDL.Text],
         [IDL.Vec(StudentAttempt)],
-        ['query'],
+        [],
       ),
-    'getTeacherQuizzes' : IDL.Func([], [IDL.Vec(Quiz)], ['query']),
+    'getTeacherQuizzes' : IDL.Func([IDL.Text], [IDL.Vec(Quiz)], []),
     'hasAttemptedQuiz' : IDL.Func([IDL.Text, IDL.Text], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'loginStudent' : IDL.Func([IDL.Text, IDL.Text], [Student], []),
-    'publishQuiz' : IDL.Func([IDL.Text], [], []),
-    'registerTeacher' : IDL.Func([IDL.Text], [], []),
+    'publishQuiz' : IDL.Func([IDL.Text, IDL.Text], [AdminActionResult], []),
     'submitQuizAttempt' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
         [
@@ -217,10 +242,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateQuiz' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(Question)],
-        [],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Vec(Question)],
+        [AdminActionResult],
         [],
       ),
+    'verifyAdminPassword' : IDL.Func([IDL.Text], [IDL.Bool], []),
   });
 };
 

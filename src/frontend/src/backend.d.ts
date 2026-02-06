@@ -16,6 +16,10 @@ export interface StudentAttempt {
     course: string;
     quizId: string;
 }
+export interface AdminActionResult {
+    message: string;
+    success: boolean;
+}
 export interface Quiz {
     id: string;
     title: string;
@@ -31,13 +35,17 @@ export interface Question {
     correctAnswerIndex: bigint;
     options: Array<string>;
 }
+export interface ChangePasswordResponse {
+    message: string;
+    success: boolean;
+}
+export type StudentId = string;
 export interface Answer {
     isCorrect: boolean;
     correctAnswerIndex: bigint;
     selectedOptionIndex: bigint;
     questionId: string;
 }
-export type StudentId = string;
 export interface Student {
     id: StudentId;
     name: string;
@@ -50,30 +58,31 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createQuiz(title: string, description: string | null, questions: Array<Question>): Promise<string>;
-    getAllAttempts(): Promise<Array<StudentAttempt>>;
-    getAllQuizzes(): Promise<Array<Quiz>>;
-    getAttemptsByStudent(_quizId: string): Promise<Array<[string, Array<Answer>]>>;
-    getAttemptsForStudent(name: string, course: string): Promise<Array<StudentAttempt>>;
+    changePassword(arg0: string, oldPassword: string, newPassword: string): Promise<ChangePasswordResponse>;
+    createQuiz(password: string, title: string, description: string | null, questions: Array<Question>): Promise<string | null>;
+    getAllAttempts(password: string): Promise<Array<StudentAttempt>>;
+    getAllQuizzes(password: string): Promise<Array<Quiz>>;
+    getAttemptsByStudent(password: string, _quizId: string): Promise<Array<[string, Array<Answer>]>>;
+    getAttemptsForStudent(password: string, name: string, course: string): Promise<Array<StudentAttempt>>;
     getCallerUserRole(): Promise<UserRole>;
     getPublishedQuizzes(): Promise<Array<Quiz>>;
     getQuiz(quizId: string): Promise<Quiz>;
-    getQuizResultsStats(quizId: string): Promise<{
+    getQuizResultsStats(password: string, quizId: string): Promise<{
         attempts: Array<StudentAttempt>;
         attemptsByQuestion: Array<[Array<Answer>, string]>;
     }>;
-    getStudentAttemptsByQuizId(_quizId: string): Promise<Array<StudentAttempt>>;
-    getTeacherQuizzes(): Promise<Array<Quiz>>;
+    getStudentAttemptsByQuizId(password: string, _quizId: string): Promise<Array<StudentAttempt>>;
+    getTeacherQuizzes(password: string): Promise<Array<Quiz>>;
     hasAttemptedQuiz(studentId: string, quizId: string): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     loginStudent(name: string, course: string): Promise<Student>;
-    publishQuiz(quizId: string): Promise<void>;
-    registerTeacher(name: string): Promise<void>;
+    publishQuiz(password: string, quizId: string): Promise<AdminActionResult>;
     submitQuizAttempt(studentName: string, course: string, quizId: string, answers: Array<[string, bigint]>): Promise<{
         attempt: StudentAttempt;
         answers: Array<Answer>;
         isRetake: boolean;
         score: bigint;
     }>;
-    updateQuiz(quizId: string, title: string, description: string | null, questions: Array<Question>): Promise<void>;
+    updateQuiz(password: string, quizId: string, title: string, description: string | null, questions: Array<Question>): Promise<AdminActionResult>;
+    verifyAdminPassword(password: string): Promise<boolean>;
 }

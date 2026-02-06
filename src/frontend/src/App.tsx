@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useInternetIdentity } from './hooks/useInternetIdentity';
 import { useActor } from './hooks/useActor';
 import AppLayout from './components/AppLayout';
 import StudentStart from './pages/student/StudentStart';
@@ -9,6 +8,7 @@ import StudentResult from './pages/student/StudentResult';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import QuizEditor from './pages/teacher/QuizEditor';
 import TeacherResults from './pages/teacher/TeacherResults';
+import ChangePassword from './pages/teacher/ChangePassword';
 import TeacherGate from './components/TeacherGate';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -24,10 +24,10 @@ type AppView =
   | { type: 'student-result'; quizId: string }
   | { type: 'teacher-dashboard' }
   | { type: 'teacher-quiz-editor'; quizId?: string }
-  | { type: 'teacher-results' };
+  | { type: 'teacher-results' }
+  | { type: 'teacher-change-password' };
 
 export default function App() {
-  const { identity } = useInternetIdentity();
   const { actor } = useActor();
   const [studentSession, setStudentSession] = useState<StudentSession | null>(null);
   const [currentView, setCurrentView] = useState<AppView>({ type: 'student-start' });
@@ -76,6 +76,10 @@ export default function App() {
     setCurrentView({ type: 'teacher-results' });
   };
 
+  const handleChangePassword = () => {
+    setCurrentView({ type: 'teacher-change-password' });
+  };
+
   const handleShowExistingResult = (quizId: string) => {
     setCurrentView({ type: 'student-result', quizId });
   };
@@ -122,6 +126,7 @@ export default function App() {
             onCreateQuiz={handleCreateQuiz}
             onEditQuiz={handleEditQuiz}
             onViewResults={handleViewResults}
+            onChangePassword={handleChangePassword}
           />
         </TeacherGate>
       )}
@@ -135,6 +140,12 @@ export default function App() {
       {currentView.type === 'teacher-results' && (
         <TeacherGate>
           <TeacherResults onBack={handleBackToDashboard} />
+        </TeacherGate>
+      )}
+
+      {currentView.type === 'teacher-change-password' && (
+        <TeacherGate>
+          <ChangePassword onBack={handleBackToDashboard} />
         </TeacherGate>
       )}
 

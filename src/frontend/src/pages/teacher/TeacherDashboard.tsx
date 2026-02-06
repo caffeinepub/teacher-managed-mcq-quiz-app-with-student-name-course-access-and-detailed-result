@@ -2,15 +2,16 @@ import { useTeacherQuizzes, usePublishQuiz } from '../../hooks/useQueries';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, BarChart3, Loader2, FileText, Eye } from 'lucide-react';
+import { Plus, Edit, BarChart3, Loader2, FileText, Eye, Lock } from 'lucide-react';
 
 interface TeacherDashboardProps {
   onCreateQuiz: () => void;
   onEditQuiz: (quizId: string) => void;
   onViewResults: () => void;
+  onChangePassword: () => void;
 }
 
-export default function TeacherDashboard({ onCreateQuiz, onEditQuiz, onViewResults }: TeacherDashboardProps) {
+export default function TeacherDashboard({ onCreateQuiz, onEditQuiz, onViewResults, onChangePassword }: TeacherDashboardProps) {
   const { data: quizzes, isLoading } = useTeacherQuizzes();
   const publishMutation = usePublishQuiz();
 
@@ -37,6 +38,10 @@ export default function TeacherDashboard({ onCreateQuiz, onEditQuiz, onViewResul
           <p className="text-muted-foreground mt-1">Create and manage your quiz collection</p>
         </div>
         <div className="flex gap-3">
+          <Button variant="outline" onClick={onChangePassword}>
+            <Lock className="h-4 w-4 mr-2" />
+            Change Password
+          </Button>
           <Button variant="outline" onClick={onViewResults}>
             <BarChart3 className="h-4 w-4 mr-2" />
             View Results

@@ -10,11 +10,16 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AdminActionResult { 'message' : string, 'success' : boolean }
 export interface Answer {
   'isCorrect' : boolean,
   'correctAnswerIndex' : bigint,
   'selectedOptionIndex' : bigint,
   'questionId' : string,
+}
+export interface ChangePasswordResponse {
+  'message' : string,
+  'success' : boolean,
 }
 export type Principal = Principal;
 export interface Question {
@@ -52,34 +57,43 @@ export type UserRole = { 'admin' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createQuiz' : ActorMethod<[string, [] | [string], Array<Question>], string>,
-  'getAllAttempts' : ActorMethod<[], Array<StudentAttempt>>,
-  'getAllQuizzes' : ActorMethod<[], Array<Quiz>>,
+  'changePassword' : ActorMethod<
+    [string, string, string],
+    ChangePasswordResponse
+  >,
+  'createQuiz' : ActorMethod<
+    [string, string, [] | [string], Array<Question>],
+    [] | [string]
+  >,
+  'getAllAttempts' : ActorMethod<[string], Array<StudentAttempt>>,
+  'getAllQuizzes' : ActorMethod<[string], Array<Quiz>>,
   'getAttemptsByStudent' : ActorMethod<
-    [string],
+    [string, string],
     Array<[string, Array<Answer>]>
   >,
   'getAttemptsForStudent' : ActorMethod<
-    [string, string],
+    [string, string, string],
     Array<StudentAttempt>
   >,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getPublishedQuizzes' : ActorMethod<[], Array<Quiz>>,
   'getQuiz' : ActorMethod<[string], Quiz>,
   'getQuizResultsStats' : ActorMethod<
-    [string],
+    [string, string],
     {
       'attempts' : Array<StudentAttempt>,
       'attemptsByQuestion' : Array<[Array<Answer>, string]>,
     }
   >,
-  'getStudentAttemptsByQuizId' : ActorMethod<[string], Array<StudentAttempt>>,
-  'getTeacherQuizzes' : ActorMethod<[], Array<Quiz>>,
+  'getStudentAttemptsByQuizId' : ActorMethod<
+    [string, string],
+    Array<StudentAttempt>
+  >,
+  'getTeacherQuizzes' : ActorMethod<[string], Array<Quiz>>,
   'hasAttemptedQuiz' : ActorMethod<[string, string], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'loginStudent' : ActorMethod<[string, string], Student>,
-  'publishQuiz' : ActorMethod<[string], undefined>,
-  'registerTeacher' : ActorMethod<[string], undefined>,
+  'publishQuiz' : ActorMethod<[string, string], AdminActionResult>,
   'submitQuizAttempt' : ActorMethod<
     [string, string, string, Array<[string, bigint]>],
     {
@@ -90,9 +104,10 @@ export interface _SERVICE {
     }
   >,
   'updateQuiz' : ActorMethod<
-    [string, string, [] | [string], Array<Question>],
-    undefined
+    [string, string, string, [] | [string], Array<Question>],
+    AdminActionResult
   >,
+  'verifyAdminPassword' : ActorMethod<[string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

@@ -1,23 +1,57 @@
-import { ReactNode } from 'react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useTeacherAuth } from '../hooks/useTeacherAuth';
+import { ReactNode, useState } from 'react';
+import { useTeacherPasswordAuth } from '../hooks/useTeacherPasswordAuth';
+import { useActor } from '../hooks/useActor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { AlertCircle, LogIn, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 
 interface TeacherGateProps {
   children: ReactNode;
 }
 
 export default function TeacherGate({ children }: TeacherGateProps) {
-  const { login, loginStatus, identity } = useInternetIdentity();
-  const { isTeacher, isLoading, needsRegistration, registerAsTeacher, registering } = useTeacherAuth();
+  const { isAuthenticated, login, isInitialized } = useTeacherPasswordAuth();
+  const { actor, isFetching: actorFetching } = useActor();
+  const [passwordInput, setPasswordInput] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
 
-  const isAuthenticated = !!identity;
-  const isLoggingIn = loginStatus === 'logging-in';
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!passwordInput.trim()) {
+      toast.error('Please enter a password');
+      return;
+    }
 
-  if (isLoading || loginStatus === 'initializing') {
+    if (!actor) {
+      toast.error('System not ready, please try again');
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const isValid = await actor.verifyAdminPassword(passwordInput);
+      if (isValid) {
+        login(passwordInput);
+        toast.success('Login successful');
+      } else {
+        toast.error('Invalid password');
+        setPasswordInput('');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error(error?.message || 'Login failed');
+      setPasswordInput('');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  if (!isInitialized || actorFetching) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -36,71 +70,38 @@ export default function TeacherGate({ children }: TeacherGateProps) {
             <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
               <LogIn className="h-6 w-6 text-primary" />
             </div>
-            <CardTitle>Teacher Sign In Required</CardTitle>
-            <CardDescription>Please sign in with Internet Identity to access the teacher portal</CardDescription>
+            <CardTitle>Teacher Login</CardTitle>
+            <CardDescription>Enter your password to access the teacher portal</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={login} disabled={isLoggingIn} className="w-full" size="lg">
-              {isLoggingIn ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Sign In with Internet Identity
-                </>
-              )}
-            </Button>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter teacher password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  disabled={isVerifying}
+                  autoFocus
+                />
+              </div>
+              <Button type="submit" disabled={isVerifying} className="w-full" size="lg">
+                {isVerifying ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Sign In
+                  </>
+                )}
+              </Button>
+            </form>
           </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (needsRegistration) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle>Complete Teacher Registration</CardTitle>
-            <CardDescription>You need to register as a teacher to access this area</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Your account is authenticated but not registered as a teacher. Click below to complete registration.
-              </AlertDescription>
-            </Alert>
-            <Button onClick={() => registerAsTeacher()} disabled={registering} className="w-full" size="lg">
-              {registering ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Registering...
-                </>
-              ) : (
-                'Register as Teacher'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!isTeacher) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="w-full max-w-md border-destructive">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
-              <AlertCircle className="h-6 w-6 text-destructive" />
-            </div>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>You do not have permission to access the teacher portal</CardDescription>
-          </CardHeader>
         </Card>
       </div>
     );

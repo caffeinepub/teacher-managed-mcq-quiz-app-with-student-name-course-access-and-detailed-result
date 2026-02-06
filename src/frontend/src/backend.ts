@@ -98,6 +98,10 @@ export interface StudentAttempt {
     course: string;
     quizId: string;
 }
+export interface AdminActionResult {
+    message: string;
+    success: boolean;
+}
 export interface Quiz {
     id: string;
     title: string;
@@ -113,13 +117,17 @@ export interface Question {
     correctAnswerIndex: bigint;
     options: Array<string>;
 }
+export interface ChangePasswordResponse {
+    message: string;
+    success: boolean;
+}
+export type StudentId = string;
 export interface Answer {
     isCorrect: boolean;
     correctAnswerIndex: bigint;
     selectedOptionIndex: bigint;
     questionId: string;
 }
-export type StudentId = string;
 export interface Student {
     id: StudentId;
     name: string;
@@ -133,32 +141,33 @@ export enum UserRole {
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createQuiz(title: string, description: string | null, questions: Array<Question>): Promise<string>;
-    getAllAttempts(): Promise<Array<StudentAttempt>>;
-    getAllQuizzes(): Promise<Array<Quiz>>;
-    getAttemptsByStudent(_quizId: string): Promise<Array<[string, Array<Answer>]>>;
-    getAttemptsForStudent(name: string, course: string): Promise<Array<StudentAttempt>>;
+    changePassword(arg0: string, oldPassword: string, newPassword: string): Promise<ChangePasswordResponse>;
+    createQuiz(password: string, title: string, description: string | null, questions: Array<Question>): Promise<string | null>;
+    getAllAttempts(password: string): Promise<Array<StudentAttempt>>;
+    getAllQuizzes(password: string): Promise<Array<Quiz>>;
+    getAttemptsByStudent(password: string, _quizId: string): Promise<Array<[string, Array<Answer>]>>;
+    getAttemptsForStudent(password: string, name: string, course: string): Promise<Array<StudentAttempt>>;
     getCallerUserRole(): Promise<UserRole>;
     getPublishedQuizzes(): Promise<Array<Quiz>>;
     getQuiz(quizId: string): Promise<Quiz>;
-    getQuizResultsStats(quizId: string): Promise<{
+    getQuizResultsStats(password: string, quizId: string): Promise<{
         attempts: Array<StudentAttempt>;
         attemptsByQuestion: Array<[Array<Answer>, string]>;
     }>;
-    getStudentAttemptsByQuizId(_quizId: string): Promise<Array<StudentAttempt>>;
-    getTeacherQuizzes(): Promise<Array<Quiz>>;
+    getStudentAttemptsByQuizId(password: string, _quizId: string): Promise<Array<StudentAttempt>>;
+    getTeacherQuizzes(password: string): Promise<Array<Quiz>>;
     hasAttemptedQuiz(studentId: string, quizId: string): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     loginStudent(name: string, course: string): Promise<Student>;
-    publishQuiz(quizId: string): Promise<void>;
-    registerTeacher(name: string): Promise<void>;
+    publishQuiz(password: string, quizId: string): Promise<AdminActionResult>;
     submitQuizAttempt(studentName: string, course: string, quizId: string, answers: Array<[string, bigint]>): Promise<{
         attempt: StudentAttempt;
         answers: Array<Answer>;
         isRetake: boolean;
         score: bigint;
     }>;
-    updateQuiz(quizId: string, title: string, description: string | null, questions: Array<Question>): Promise<void>;
+    updateQuiz(password: string, quizId: string, title: string, description: string | null, questions: Array<Question>): Promise<AdminActionResult>;
+    verifyAdminPassword(password: string): Promise<boolean>;
 }
 import type { Principal as _Principal, Question as _Question, Quiz as _Quiz, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -191,73 +200,87 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createQuiz(arg0: string, arg1: string | null, arg2: Array<Question>): Promise<string> {
+    async changePassword(arg0: string, arg1: string, arg2: string): Promise<ChangePasswordResponse> {
         if (this.processError) {
             try {
-                const result = await this.actor.createQuiz(arg0, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg1), arg2);
+                const result = await this.actor.changePassword(arg0, arg1, arg2);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createQuiz(arg0, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg1), arg2);
+            const result = await this.actor.changePassword(arg0, arg1, arg2);
             return result;
         }
     }
-    async getAllAttempts(): Promise<Array<StudentAttempt>> {
+    async createQuiz(arg0: string, arg1: string, arg2: string | null, arg3: Array<Question>): Promise<string | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getAllAttempts();
+                const result = await this.actor.createQuiz(arg0, arg1, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg2), arg3);
+                return from_candid_opt_n4(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createQuiz(arg0, arg1, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg2), arg3);
+            return from_candid_opt_n4(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllAttempts(arg0: string): Promise<Array<StudentAttempt>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllAttempts(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getAllAttempts();
+            const result = await this.actor.getAllAttempts(arg0);
             return result;
         }
     }
-    async getAllQuizzes(): Promise<Array<Quiz>> {
+    async getAllQuizzes(arg0: string): Promise<Array<Quiz>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getAllQuizzes();
-                return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.getAllQuizzes(arg0);
+                return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getAllQuizzes();
-            return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.getAllQuizzes(arg0);
+            return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getAttemptsByStudent(arg0: string): Promise<Array<[string, Array<Answer>]>> {
+    async getAttemptsByStudent(arg0: string, arg1: string): Promise<Array<[string, Array<Answer>]>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getAttemptsByStudent(arg0);
+                const result = await this.actor.getAttemptsByStudent(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getAttemptsByStudent(arg0);
+            const result = await this.actor.getAttemptsByStudent(arg0, arg1);
             return result;
         }
     }
-    async getAttemptsForStudent(arg0: string, arg1: string): Promise<Array<StudentAttempt>> {
+    async getAttemptsForStudent(arg0: string, arg1: string, arg2: string): Promise<Array<StudentAttempt>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getAttemptsForStudent(arg0, arg1);
+                const result = await this.actor.getAttemptsForStudent(arg0, arg1, arg2);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getAttemptsForStudent(arg0, arg1);
+            const result = await this.actor.getAttemptsForStudent(arg0, arg1, arg2);
             return result;
         }
     }
@@ -279,73 +302,73 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getPublishedQuizzes();
-                return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPublishedQuizzes();
-            return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
         }
     }
     async getQuiz(arg0: string): Promise<Quiz> {
         if (this.processError) {
             try {
                 const result = await this.actor.getQuiz(arg0);
-                return from_candid_Quiz_n5(this._uploadFile, this._downloadFile, result);
+                return from_candid_Quiz_n6(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getQuiz(arg0);
-            return from_candid_Quiz_n5(this._uploadFile, this._downloadFile, result);
+            return from_candid_Quiz_n6(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getQuizResultsStats(arg0: string): Promise<{
+    async getQuizResultsStats(arg0: string, arg1: string): Promise<{
         attempts: Array<StudentAttempt>;
         attemptsByQuestion: Array<[Array<Answer>, string]>;
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.getQuizResultsStats(arg0);
+                const result = await this.actor.getQuizResultsStats(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getQuizResultsStats(arg0);
+            const result = await this.actor.getQuizResultsStats(arg0, arg1);
             return result;
         }
     }
-    async getStudentAttemptsByQuizId(arg0: string): Promise<Array<StudentAttempt>> {
+    async getStudentAttemptsByQuizId(arg0: string, arg1: string): Promise<Array<StudentAttempt>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getStudentAttemptsByQuizId(arg0);
+                const result = await this.actor.getStudentAttemptsByQuizId(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getStudentAttemptsByQuizId(arg0);
+            const result = await this.actor.getStudentAttemptsByQuizId(arg0, arg1);
             return result;
         }
     }
-    async getTeacherQuizzes(): Promise<Array<Quiz>> {
+    async getTeacherQuizzes(arg0: string): Promise<Array<Quiz>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getTeacherQuizzes();
-                return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.getTeacherQuizzes(arg0);
+                return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getTeacherQuizzes();
-            return from_candid_vec_n4(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.getTeacherQuizzes(arg0);
+            return from_candid_vec_n5(this._uploadFile, this._downloadFile, result);
         }
     }
     async hasAttemptedQuiz(arg0: string, arg1: string): Promise<boolean> {
@@ -390,31 +413,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async publishQuiz(arg0: string): Promise<void> {
+    async publishQuiz(arg0: string, arg1: string): Promise<AdminActionResult> {
         if (this.processError) {
             try {
-                const result = await this.actor.publishQuiz(arg0);
+                const result = await this.actor.publishQuiz(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.publishQuiz(arg0);
-            return result;
-        }
-    }
-    async registerTeacher(arg0: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.registerTeacher(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.registerTeacher(arg0);
+            const result = await this.actor.publishQuiz(arg0, arg1);
             return result;
         }
     }
@@ -437,31 +446,45 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateQuiz(arg0: string, arg1: string, arg2: string | null, arg3: Array<Question>): Promise<void> {
+    async updateQuiz(arg0: string, arg1: string, arg2: string, arg3: string | null, arg4: Array<Question>): Promise<AdminActionResult> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateQuiz(arg0, arg1, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg2), arg3);
+                const result = await this.actor.updateQuiz(arg0, arg1, arg2, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg3), arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateQuiz(arg0, arg1, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg2), arg3);
+            const result = await this.actor.updateQuiz(arg0, arg1, arg2, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg3), arg4);
+            return result;
+        }
+    }
+    async verifyAdminPassword(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.verifyAdminPassword(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.verifyAdminPassword(arg0);
             return result;
         }
     }
 }
-function from_candid_Quiz_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Quiz): Quiz {
-    return from_candid_record_n6(_uploadFile, _downloadFile, value);
+function from_candid_Quiz_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Quiz): Quiz {
+    return from_candid_record_n7(_uploadFile, _downloadFile, value);
 }
 function from_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n9(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_opt_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: string;
     title: string;
     published: boolean;
@@ -480,7 +503,7 @@ function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint
         id: value.id,
         title: value.title,
         published: value.published,
-        description: record_opt_to_undefined(from_candid_opt_n7(_uploadFile, _downloadFile, value.description)),
+        description: record_opt_to_undefined(from_candid_opt_n4(_uploadFile, _downloadFile, value.description)),
         author: value.author,
         questions: value.questions
     };
@@ -494,8 +517,8 @@ function from_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function from_candid_vec_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Quiz>): Array<Quiz> {
-    return value.map((x)=>from_candid_Quiz_n5(_uploadFile, _downloadFile, x));
+function from_candid_vec_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Quiz>): Array<Quiz> {
+    return value.map((x)=>from_candid_Quiz_n6(_uploadFile, _downloadFile, x));
 }
 function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);

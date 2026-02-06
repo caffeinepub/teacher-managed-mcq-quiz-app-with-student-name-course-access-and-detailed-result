@@ -1,107 +1,83 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-06T02:07:23.551Z",
-  "summary": "Diff adds a new Motoko backend actor and a full React/Tailwind frontend with student start flow, quiz taking/results, and teacher portal gated by Internet Identity. Several key requirements cannot be confirmed due to backend truncation, and some requirements appear unimplemented or violated based on visible frontend usage (notably results access control and MCQ constraints).",
+  "generatedAt": "2026-02-06T03:11:09.142Z",
+  "summary": "Diff implements a password-based teacher gate in the frontend, adds a teacher change-password page, updates the header logo and controls, and introduces backend password verification/change logic plus a migration module. However, evidence is insufficient/contradictory for upgrade-safe password persistence and for ensuring *all* teacher/admin backend APIs are protected by the new password mechanism. Some unrelated UI/theme/footer changes also appear.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Enforce MCQ questions with 4+ options and exactly one correct answer.",
-      "reason": "Teacher UI validation allows questions with as few as 2 options (and does not show enforcement of exactly one correct option). Backend-side enforcement is not visible in the truncated backend excerpt, so enforcement cannot be confirmed.",
+      "id": "REQ-10",
+      "requirement": "All teacher/admin backend methods that previously relied on ensureAdminOrTeacher (or equivalent) must require successful password authentication for all teacher-only APIs (create/update/publish quizzes, view results, and any other teacher-only APIs).",
+      "reason": "The diff shows password enforcement for createQuiz, and frontend hooks passing password for some teacher operations, but backend/main.mo is truncated and does not provide evidence that every teacher/admin API (e.g., updateQuiz/publishQuiz/results APIs/any other teacher-only endpoints) has been updated to validate password and reject missing/invalid password.",
       "evidence": [
-        "frontend/src/pages/teacher/QuizEditor.tsx (validates q.options.length < 2)",
-        "backend/main.mo (no visible validation logic in shown portion)"
+        "backend/main.mo (truncated; only createQuiz shown with password + authenticateAdmin)",
+        "frontend/src/hooks/useQueries.ts (truncated; shows some teacher calls include password, but not all endpoints are visible)"
       ]
     },
     {
-      "id": "REQ-2",
-      "requirement": "Full CRUD for quizzes and questions (create/read/update/delete).",
-      "reason": "Only createQuiz/updateQuiz/publishQuiz are visible in the truncated backend excerpt. Delete operations and question-level CRUD endpoints are not evidenced in the shown diff summary, so full CRUD cannot be verified.",
+      "id": "REQ-11",
+      "requirement": "Backend persists the teacher password across upgrades.",
+      "reason": "backend/migration.mo sets adminPassword to ?\"admin123\" for upgrades, which suggests the password may be reset during upgrade rather than preserved. Also, the diff does not show stable storage/preupgrade/postupgrade logic that would preserve an updated password value across upgrades.",
       "evidence": [
-        "backend/main.mo (shows registerTeacher/createQuiz/updateQuiz/publishQuiz; rest truncated)"
+        "backend/migration.mo (adminPassword = ?\"admin123\" // Default password for upgrades)",
+        "backend/main.mo (shows var adminPassword : ?Text = ?\"admin123\" but no stable persistence logic visible in truncated snippet)"
       ]
     },
     {
-      "id": "REQ-2",
-      "requirement": "Quizzes and questions persist across reloads and canister upgrades (standard persistence approach).",
-      "reason": "Visible backend storage uses in-memory Maps (Map.empty) with no stable variables or preupgrade/postupgrade logic shown. Because the file is truncated, persistence might exist later, but it is not evidenced in the visible portion.",
+      "id": "REQ-12",
+      "requirement": "On successful password change, a success confirmation is shown in the UI and subsequent teacher actions require the new password.",
+      "reason": "ChangePassword page clears fields and navigates back after success, but no explicit success confirmation (toast/message) is shown in the provided file content. Also, while a hook method updatePassword exists, the provided ChangePassword.tsx does not update session-stored password on success (it only clears inputs and calls onBack). The diff summary text claims it updates stored password, but that behavior is not evidenced in the shown code.",
       "evidence": [
-        "backend/main.mo (quizzes/attempts/teachers defined as let quizzes = Map.empty..., etc.)"
+        "frontend/src/pages/teacher/ChangePassword.tsx (no success UI message/toast; does not call updatePassword)",
+        "frontend/src/hooks/useTeacherPasswordAuth.ts (has updatePassword, but not used in ChangePassword.tsx shown)"
       ]
     },
     {
-      "id": "REQ-1",
-      "requirement": "Restrict teacher-only queries (e.g., viewing all student results) to authenticated teachers only; backend rejects when caller not authenticated.",
-      "reason": "Frontend student result page calls an actor method named getStudentAttemptsByQuizId and then filters client-side, which would require fetching all attempts for a quiz unless the backend already filters by caller/student. No evidence is shown that the backend enforces teacher-only access for quiz-wide attempts, so the teacher-only restriction cannot be verified and appears at risk.",
+      "id": "REQ-14",
+      "requirement": "Replace the header logo currently using /assets/generated/quiz-logo.dim_512x512.png with the new DEV Classes logo asset and ensure it appears consistently in Student and Teacher portal header branding.",
+      "reason": "Header is updated to reference /assets/generated/dev-classes-logo.dim_512x512.png, but the diff summary does not show the actual image asset being added under frontend/public/assets/generated. Without evidence of the file addition, it is unclear the logo asset is included in the build output.",
       "evidence": [
-        "frontend/src/pages/student/StudentResult.tsx (calls actor.getStudentAttemptsByQuizId(quizId) then filters locally by studentId)",
-        "frontend/src/pages/teacher/TeacherResults.tsx (uses useQuizAttempts(selectedQuizId))",
-        "backend/main.mo (access control exists but relevant query implementations are truncated)"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "Backend prevents creating a new attempt when the same Name+Course tries the same quiz again.",
-      "reason": "Frontend checks hasAttempted and redirects, but backend-side enforcement is not visible in the truncated backend excerpt, so the required backend prevention cannot be confirmed.",
-      "evidence": [
-        "frontend/src/pages/student/QuizTake.tsx (uses useHasAttemptedQuiz and redirects)",
-        "backend/main.mo (attempt creation/check logic not visible in shown portion)"
+        "frontend/src/components/Header.tsx (references /assets/generated/dev-classes-logo.dim_512x512.png)",
+        "File diff summary (no added image asset path shown)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Admin-token/secret-based access control initialization via URL parameter (caffeineAdminToken) and actor._initializeAccessControlWithSecret.",
-      "reason": "BuildRequest does not mention any admin secret token bootstrap mechanism; it only requests teacher authentication via Internet Identity.",
+      "description": "Global theme/color palette overhaul (warm amber/orange OKLCH) beyond the requested authentication/logo changes.",
+      "reason": "The BuildRequest focuses on replacing teacher auth, adding change password, and updating the logo. A broad styling/theme change is not requested.",
       "evidence": [
-        "frontend/src/hooks/useActor.ts (getSecretParameter('caffeineAdminToken') and actor._initializeAccessControlWithSecret(adminToken))",
-        "frontend/src/utils/urlParams.ts (URL parameter utilities)"
+        "frontend-file-summaries.txt (frontend/src/index.css described as new global warm amber/orange palette)"
       ]
     },
     {
-      "description": "Teacher self-registration flow (registerTeacher) after signing in.",
-      "reason": "BuildRequest requires teacher authentication via Internet Identity and restricting teacher actions, but does not specify an additional teacher registration step/workflow.",
+      "description": "Footer includes a caffeine.ai attribution link.",
+      "reason": "No requirement mentions changing or adding footer attribution.",
       "evidence": [
-        "backend/main.mo (public shared func registerTeacher)",
-        "frontend/src/components/TeacherGate.tsx (registration UI)",
-        "frontend/src/hooks/useTeacherAuth.ts (calls actor.registerTeacher)"
+        "frontend-file-summaries.txt (frontend/src/components/Footer.tsx: caffeine.ai attribution link)"
       ]
     },
     {
-      "description": "Footer branding/link to caffeine.ai.",
-      "reason": "Not requested by the BuildRequest.",
+      "description": "StudentResult behavior change to show a simplified result because students cannot fetch attempt details from backend.",
+      "reason": "BuildRequest explicitly states student login/identity rules and quiz attempt rules should not change beyond what is necessary for teacher auth replacement; this student results behavior change is not requested and may be unrelated.",
       "evidence": [
-        "frontend/src/components/Footer.tsx"
+        "frontend/src/pages/student/StudentResult.tsx (notes about students not fetching attempt details; simplified view)"
       ]
     }
   ],
   "confidence": 0.62,
   "changed_files": [
-    "all_files_summary.json",
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/index.css",
-    "frontend/index.html",
     "frontend/src/App.tsx",
-    "frontend/src/components/AppLayout.tsx",
-    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
     "frontend/src/components/TeacherGate.tsx",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/hooks/useTeacherAuth.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/student/ActiveQuizPicker.tsx",
-    "frontend/src/pages/student/QuizTake.tsx",
+    "frontend/src/hooks/useTeacherPasswordAuth.ts",
     "frontend/src/pages/student/StudentResult.tsx",
-    "frontend/src/pages/student/StudentStart.tsx",
-    "frontend/src/pages/teacher/QuizEditor.tsx",
+    "frontend/src/pages/teacher/ChangePassword.tsx",
     "frontend/src/pages/teacher/TeacherDashboard.tsx",
-    "frontend/src/pages/teacher/TeacherResults.tsx",
-    "frontend/src/utils/urlParams.ts",
-    "frontend/tailwind.config.js",
     "project_state.json"
   ]
 }

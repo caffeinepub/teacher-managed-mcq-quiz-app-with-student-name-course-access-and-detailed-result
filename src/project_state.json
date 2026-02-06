@@ -1,13 +1,13 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Quiz app for a teacher: teacher logs in to manage quizzes/MCQs; students enter name and course to take a quiz (no Internet Identity); each student can attempt a quiz once; results visible to both students and teacher with per-question correctness for teacher.",
+  "projectStateVersion": 5,
+  "summary": "Quiz app for a teacher: teacher logs in with a single password-based teacher account (no Internet Identity), can manage quizzes/MCQs; students enter name and course to take a quiz; each student can attempt a quiz once; results visible to both students and teacher with per-question correctness for teacher.",
   "architectural_notes": [
-    "Teacher uses Internet Identity for authentication; students do not use Internet Identity and instead provide name + course."
+    "Teacher authentication will be password-based (single teacher account) instead of Internet Identity; default password is admin123 and teacher can change it via old+new password form."
   ],
   "known_issues": [],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Minimal flat school/quiz logo mark with warm colors (quiz-logo.dim_512x512.png)\n- Subtle educational doodle background pattern, light/neutral palette (quiz-background.dim_1920x1080.png)",
+  "imageRequirements": "## Required Images\n- DEV Classes logo on white background (dev-classes-logo.dim_512x512.png)",
   "existing_features": [
     {
       "id": "feature-implement-teacher-authentication-using-internet-identity-and-restrict-all-teacher-admin-actions-create-edit-quizzes-view-all-student-results-to-authenticated-teachers-only",
@@ -72,6 +72,38 @@
         "REQ-9"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-replace-the-current-internet-identity-based-teacher-authentication-authorization-with-a-single-password-based-teacher-login-one-teacher-account-enforced-by-the-backend-for-all-teacher-admin-actions-create-update-publish-quizzes-view-results-and-any-other-teacher-only-apis",
+      "title": "Replace the current Internet Identity-based teacher authentication/authorization with a single password-based teacher login (one teacher account) enforced by the backend for all teacher/admin actions (create/update/publish quizzes, view results, and any other teacher-only APIs).",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-teacher-change-password-feature-backend-api-to-change-the-teacher-password-requiring-old-password-new-password-and-a-teacher-ui-screen-form-to-perform-the-change",
+      "title": "Add a teacher Change Password feature: backend API to change the teacher password requiring old password + new password, and a teacher UI screen/form to perform the change.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-teacher-portal-gating-and-header-controls-to-use-password-based-login-state-instead-of-useinternetidentity-without-modifying-any-files-in-the-immutablepaths-list-compose-new-hooks-components-as-needed-and-update-call-sites",
+      "title": "Update the frontend teacher portal gating and header controls to use password-based login state instead of `useInternetIdentity`, without modifying any files in the immutablePaths list (compose new hooks/components as needed and update call sites).",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-student-and-teacher-portal-logo-with-the-uploaded-dev-classes-logo-across-the-app-s-home-portal-header-branding",
+      "title": "Replace the student and teacher portal logo with the uploaded DEV Classes logo across the app’s home/portal header branding.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -100,16 +132,36 @@
       "status": "pending"
     },
     {
-      "id": "AR-5",
-      "summary": "Teacher authentication via Internet Identity",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
       "id": "AR-7",
       "summary": "Create backend data models and APIs to support quiz authoring: quizzes with title and optional description, and multiple-choice questions with 4+ options and exactly one correct answer, with full CRUD for teachers.",
       "reqIds": [
         "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Replace Internet Identity with password-based teacher login (single teacher account) using default password admin123",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Add teacher Change Password flow requiring old password + new password",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Replace both student and teacher home-screen logos with the provided portal/DEV Classes logo asset",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Implement backend storage and APIs for teacher password authentication using default password \"admin123\" on first install, including a teacher login API that the frontend can use to verify the password, and update all teacher/admin APIs to validate access via the password mechanism.",
+      "reqIds": [
+        "REQ-11"
       ],
       "status": "pending"
     }

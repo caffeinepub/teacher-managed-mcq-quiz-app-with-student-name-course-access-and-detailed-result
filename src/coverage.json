@@ -1,267 +1,112 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-06T02:07:23.554Z",
+  "generatedAt": "2026-02-06T03:11:09.146Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 9,
-    "implemented": 8,
+    "total": 5,
+    "implemented": 4,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Implement teacher authentication using Internet Identity and restrict all teacher/admin actions (create/edit quizzes, view all student results) to authenticated teachers only.",
+        "id": "REQ-10",
+        "summary": "Replace the current Internet Identity-based teacher authentication/authorization with a single password-based teacher login (one teacher account) enforced by the backend for all teacher/admin actions (create/update/publish quizzes, view results, and any other teacher-only APIs).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/hooks/useTeacherAuth.ts",
+          "frontend/src/hooks/useTeacherPasswordAuth.ts",
           "frontend/src/components/TeacherGate.tsx",
-          "frontend/src/hooks/useActor.ts",
-          "frontend/src/components/Header.tsx"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/teacher/TeacherDashboard.tsx",
+          "frontend/src/pages/teacher/TeacherResults.tsx",
+          "frontend/src/pages/teacher/QuizEditor.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/App.tsx",
-          "frontend/src/hooks/useTeacherAuth.ts",
+          "frontend/src/hooks/useTeacherPasswordAuth.ts",
           "frontend/src/components/TeacherGate.tsx",
-          "frontend/src/hooks/useActor.ts",
-          "frontend/src/components/Header.tsx"
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/teacher/TeacherDashboard.tsx"
         ]
       },
       {
-        "id": "REQ-2",
-        "summary": "Create backend data models and APIs to support quiz authoring: quizzes with title and optional description, and multiple-choice questions with 4+ options and exactly one correct answer, with full CRUD for teachers.",
+        "id": "REQ-11",
+        "summary": "Implement backend storage and APIs for teacher password authentication using default password \"admin123\" on first install, including a teacher login API that the frontend can use to verify the password, and update all teacher/admin APIs to validate access via the password mechanism.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-3",
-        "summary": "Build teacher/admin UI to manage quizzes and questions: list quizzes, create a new quiz, edit quiz metadata, add/edit/delete MCQ questions, and publish/activate a quiz for students to take.",
+        "id": "REQ-12",
+        "summary": "Add a teacher Change Password feature: backend API to change the teacher password requiring old password + new password, and a teacher UI screen/form to perform the change.",
         "status": "implemented",
         "plannedFiles": [
+          "frontend/src/pages/teacher/ChangePassword.tsx",
+          "frontend/src/App.tsx",
           "frontend/src/pages/teacher/TeacherDashboard.tsx",
-          "frontend/src/pages/teacher/QuizEditor.tsx",
-          "frontend/src/hooks/useTeacherQuizzes.ts",
-          "frontend/src/App.tsx"
+          "frontend/src/hooks/useTeacherPasswordAuth.ts"
         ],
         "matchedFiles": [
+          "frontend/src/pages/teacher/ChangePassword.tsx",
+          "frontend/src/App.tsx",
           "frontend/src/pages/teacher/TeacherDashboard.tsx",
-          "frontend/src/pages/teacher/QuizEditor.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/hooks/useTeacherPasswordAuth.ts"
         ]
       },
       {
-        "id": "REQ-4",
-        "summary": "Implement student access without Internet Identity: provide a student start flow that collects student name and course name, then allows the student to take an active quiz.",
+        "id": "REQ-13",
+        "summary": "Update the frontend teacher portal gating and header controls to use password-based login state instead of `useInternetIdentity`, without modifying any files in the immutablePaths list (compose new hooks/components as needed and update call sites).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/student/StudentStart.tsx",
-          "frontend/src/hooks/useStudentSession.ts",
-          "frontend/src/pages/student/ActiveQuizPicker.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/student/StudentStart.tsx",
-          "frontend/src/pages/student/ActiveQuizPicker.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Enforce the rule that a student can attempt a given quiz only once, based on the student identity formed from the entered name + course (as provided in the student start flow).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/student/QuizTake.tsx",
-          "frontend/src/pages/student/StudentResult.tsx",
-          "frontend/src/hooks/useStudentAttempts.ts",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/student/QuizTake.tsx",
-          "frontend/src/pages/student/StudentResult.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Implement quiz-taking UI for students: render MCQ questions, allow selecting answers, submit the attempt, and compute/store the result in the backend.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/student/QuizTake.tsx",
-          "frontend/src/pages/student/StudentResult.tsx",
-          "frontend/src/hooks/useQuizData.ts",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/student/QuizTake.tsx",
-          "frontend/src/pages/student/StudentResult.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Provide teacher results dashboard to view all student attempts per quiz, including each student’s name and course and a detailed per-question breakdown showing the student’s selected answer and whether it was correct/incorrect.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/teacher/TeacherResults.tsx",
-          "frontend/src/pages/teacher/AttemptDetail.tsx",
-          "frontend/src/hooks/useTeacherResults.ts",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/teacher/TeacherResults.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Add a coherent, distinct visual theme and layout for the app (teacher and student areas) and apply it consistently using Tailwind + the existing UI component library; avoid a blue/purple primary palette.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/components/AppLayout.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/index.css",
-          "frontend/tailwind.config.js",
-          "frontend/src/components/AppLayout.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Add generated static image assets to support the theme, place them under frontend/public/assets/generated, and reference them from the UI (e.g., app logo and a subtle background/hero illustration).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/public/assets/generated/quiz-logo.dim_512x512.png",
-          "frontend/public/assets/generated/quiz-background.dim_1920x1080.png",
           "frontend/src/components/Header.tsx",
-          "frontend/src/components/AppLayout.tsx"
+          "frontend/src/components/TeacherGate.tsx",
+          "frontend/src/hooks/useTeacherAuth.ts",
+          "frontend/src/App.tsx"
         ],
         "matchedFiles": [
-          "frontend/public/assets/generated/quiz-logo.dim_512x512.png",
-          "frontend/public/assets/generated/quiz-background.dim_1920x1080.png",
           "frontend/src/components/Header.tsx",
-          "frontend/src/components/AppLayout.tsx"
+          "frontend/src/components/TeacherGate.tsx",
+          "frontend/src/hooks/useTeacherAuth.ts",
+          "frontend/src/App.tsx"
+        ]
+      },
+      {
+        "id": "REQ-14",
+        "summary": "Replace the student and teacher portal logo with the uploaded DEV Classes logo across the app’s home/portal header branding.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/public/assets/generated/dev-classes-logo.dim_512x512.png",
+          "frontend/src/components/Header.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/public/assets/generated/dev-classes-logo.dim_512x512.png",
+          "frontend/src/components/Header.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/authorization/MixinAuthorization.mo",
-    "backend/authorization/access-control.mo",
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
-    "build-template/Dockerfile",
-    "build-template/LICENSE",
     "build-template/README.md",
-    "build-template/deploy.sh",
-    "build-template/icp.yaml",
-    "build-template/package.json",
-    "build-template/pnpm-lock.yaml",
-    "build-template/pnpm-workspace.yaml",
-    "build-template/scripts/prune-unused-images.js",
-    "build-template/scripts/resize-images.js",
-    "build-template/src/backend/canister.yaml",
-    "build-template/src/backend/system-idl/aaaaa-aa.did",
-    "build-template/src/frontend/canister.yaml",
-    "build-template/src/frontend/components.json",
-    "build-template/src/frontend/env.json",
-    "build-template/src/frontend/eslint-rules/no-bigint-in-query-keys.js",
-    "build-template/src/frontend/eslint-rules/require-internet-identity-provider.js",
-    "build-template/src/frontend/eslint.config.js",
-    "build-template/src/frontend/package.json",
-    "build-template/src/frontend/postcss.config.js",
-    "build-template/src/frontend/src/components/ui/accordion.tsx",
-    "build-template/src/frontend/src/components/ui/alert-dialog.tsx",
-    "build-template/src/frontend/src/components/ui/alert.tsx",
-    "build-template/src/frontend/src/components/ui/aspect-ratio.tsx",
-    "build-template/src/frontend/src/components/ui/avatar.tsx",
-    "build-template/src/frontend/src/components/ui/badge.tsx",
-    "build-template/src/frontend/src/components/ui/breadcrumb.tsx",
-    "build-template/src/frontend/src/components/ui/button.tsx",
-    "build-template/src/frontend/src/components/ui/calendar.tsx",
-    "build-template/src/frontend/src/components/ui/card.tsx",
-    "build-template/src/frontend/src/components/ui/carousel.tsx",
-    "build-template/src/frontend/src/components/ui/chart.tsx",
-    "build-template/src/frontend/src/components/ui/checkbox.tsx",
-    "build-template/src/frontend/src/components/ui/collapsible.tsx",
-    "build-template/src/frontend/src/components/ui/command.tsx",
-    "build-template/src/frontend/src/components/ui/context-menu.tsx",
-    "build-template/src/frontend/src/components/ui/dialog.tsx",
-    "build-template/src/frontend/src/components/ui/drawer.tsx",
-    "build-template/src/frontend/src/components/ui/dropdown-menu.tsx",
-    "build-template/src/frontend/src/components/ui/form.tsx",
-    "build-template/src/frontend/src/components/ui/hover-card.tsx",
-    "build-template/src/frontend/src/components/ui/input-otp.tsx",
-    "build-template/src/frontend/src/components/ui/input.tsx",
-    "build-template/src/frontend/src/components/ui/label.tsx",
-    "build-template/src/frontend/src/components/ui/menubar.tsx",
-    "build-template/src/frontend/src/components/ui/navigation-menu.tsx",
-    "build-template/src/frontend/src/components/ui/pagination.tsx",
-    "build-template/src/frontend/src/components/ui/popover.tsx",
-    "build-template/src/frontend/src/components/ui/progress.tsx",
-    "build-template/src/frontend/src/components/ui/radio-group.tsx",
-    "build-template/src/frontend/src/components/ui/resizable.tsx",
-    "build-template/src/frontend/src/components/ui/scroll-area.tsx",
-    "build-template/src/frontend/src/components/ui/select.tsx",
-    "build-template/src/frontend/src/components/ui/separator.tsx",
-    "build-template/src/frontend/src/components/ui/sheet.tsx",
-    "build-template/src/frontend/src/components/ui/sidebar.tsx",
-    "build-template/src/frontend/src/components/ui/skeleton.tsx",
-    "build-template/src/frontend/src/components/ui/slider.tsx",
-    "build-template/src/frontend/src/components/ui/sonner.tsx",
-    "build-template/src/frontend/src/components/ui/switch.tsx",
-    "build-template/src/frontend/src/components/ui/table.tsx",
-    "build-template/src/frontend/src/components/ui/tabs.tsx",
-    "build-template/src/frontend/src/components/ui/textarea.tsx",
-    "build-template/src/frontend/src/components/ui/toggle-group.tsx",
-    "build-template/src/frontend/src/components/ui/toggle.tsx",
-    "build-template/src/frontend/src/components/ui/tooltip.tsx",
-    "build-template/src/frontend/src/hooks/use-mobile.tsx",
-    "build-template/src/frontend/src/lib/utils.ts",
-    "build-template/src/frontend/tsconfig.json",
-    "build-template/src/frontend/vite.config.js",
-    "build-template/tsconfig.json",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/index.css",
-    "frontend/index.html",
-    "frontend/public/assets/generated/quiz-background.dim_1920x1080.png",
-    "frontend/public/assets/generated/quiz-logo.dim_512x512.png",
+    "frontend/public/assets/generated/dev-classes-logo.dim_512x512.png",
     "frontend/src/App.tsx",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/components/AppLayout.tsx",
-    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
     "frontend/src/components/TeacherGate.tsx",
-    "frontend/src/config.ts",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
-    "frontend/src/hooks/useActor.ts",
-    "frontend/src/hooks/useInternetIdentity.ts",
     "frontend/src/hooks/useQueries.ts",
     "frontend/src/hooks/useTeacherAuth.ts",
-    "frontend/src/index.css",
-    "frontend/src/main.tsx",
-    "frontend/src/pages/student/ActiveQuizPicker.tsx",
-    "frontend/src/pages/student/QuizTake.tsx",
+    "frontend/src/hooks/useTeacherPasswordAuth.ts",
     "frontend/src/pages/student/StudentResult.tsx",
-    "frontend/src/pages/student/StudentStart.tsx",
-    "frontend/src/pages/teacher/QuizEditor.tsx",
+    "frontend/src/pages/teacher/ChangePassword.tsx",
     "frontend/src/pages/teacher/TeacherDashboard.tsx",
-    "frontend/src/pages/teacher/TeacherResults.tsx",
-    "frontend/src/ui-summary.json",
-    "frontend/src/utils/StorageClient.ts",
-    "frontend/src/utils/urlParams.ts",
-    "frontend/tailwind.config.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,207 +1,116 @@
 {
   "kind": "build_request",
-  "title": "Teacher-managed MCQ Quiz App with Student Name/Course Access and Detailed Results",
+  "title": "Replace Internet Identity teacher auth with single password login + change password, and update portal logo",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Implement teacher authentication using Internet Identity and restrict all teacher/admin actions (create/edit quizzes, view all student results) to authenticated teachers only.",
+      "id": "REQ-10",
+      "text": "Replace the current Internet Identity-based teacher authentication/authorization with a single password-based teacher login (one teacher account) enforced by the backend for all teacher/admin actions (create/update/publish quizzes, view results, and any other teacher-only APIs).",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-5",
-          "msg-7"
+          "msg-1"
         ],
         "quotes": [
-          "Haa main backend me login karke naye quiz aur MCQ questions add/modify kar sku",
-          "teacher Internet Identity se login karega"
+          "Replace Internet Identity with password-based teacher login (single teacher account) using default password admin123"
         ]
       },
       "acceptanceCriteria": [
-        "Teacher can sign in/out using Internet Identity in the UI.",
-        "Backend rejects admin/teacher mutations and teacher-only queries when caller is not authenticated.",
-        "UI clearly indicates teacher signed-in state and provides a sign-out action."
+        "All backend methods that currently rely on `ensureAdminOrTeacher(caller)` (or equivalent role checks) require successful password authentication instead.",
+        "Students can continue accessing student flows without any authentication changes.",
+        "Teacher-only pages (dashboard, quiz editor, results) are inaccessible until the correct teacher password is provided.",
+        "No Internet Identity login/logout UI is required for teacher access after this change."
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Create backend data models and APIs to support quiz authoring: quizzes with title and optional description, and multiple-choice questions with 4+ options and exactly one correct answer, with full CRUD for teachers.",
+      "id": "REQ-11",
+      "text": "Implement backend storage and APIs for teacher password authentication using default password \"admin123\" on first install, including a teacher login API that the frontend can use to verify the password, and update all teacher/admin APIs to validate access via the password mechanism.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "naye quiz aur MCQ questions add/modify kar sku"
+          "Password admin123"
         ]
       },
       "acceptanceCriteria": [
-        "Backend supports creating, reading, updating, and deleting quizzes.",
-        "Backend supports creating, reading, updating, and deleting questions within a quiz.",
-        "Each question enforces a single correct option.",
-        "Quizzes and questions persist across reloads and canister upgrades (within the template’s standard persistence approach)."
+        "On a fresh deploy, teacher password defaults to exactly \"admin123\".",
+        "Backend persists the teacher password across upgrades.",
+        "Backend provides an API to validate a teacher password for login.",
+        "All teacher/admin APIs validate password access and return a clear error message when the password is missing/invalid."
       ]
     },
     {
-      "id": "REQ-3",
-      "text": "Build teacher/admin UI to manage quizzes and questions: list quizzes, create a new quiz, edit quiz metadata, add/edit/delete MCQ questions, and publish/activate a quiz for students to take.",
+      "id": "REQ-12",
+      "text": "Add a teacher Change Password feature: backend API to change the teacher password requiring old password + new password, and a teacher UI screen/form to perform the change.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Change Password screen me teacher ko purana password + naya password dono dalne honge"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Teacher can open a Change Password screen from the teacher portal UI.",
+        "Form requires both Old Password and New Password fields; submission is blocked when either is empty.",
+        "Backend rejects change-password attempts when the old password is incorrect.",
+        "On successful password change, a success confirmation is shown in the UI and subsequent teacher actions require the new password."
+      ]
+    },
+    {
+      "id": "REQ-13",
+      "text": "Update the frontend teacher portal gating and header controls to use password-based login state instead of `useInternetIdentity`, without modifying any files in the immutablePaths list (compose new hooks/components as needed and update call sites).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "naye quiz aur MCQ questions add/modify kar sku"
+          "Replace Internet Identity with password-based teacher login (single teacher account)"
         ]
       },
       "acceptanceCriteria": [
-        "Teacher can create and edit a quiz from the browser UI.",
-        "Teacher can add/edit/delete MCQ questions and set the correct answer.",
-        "Teacher can mark a quiz as active/available to students.",
-        "All user-facing UI text is in English."
+        "`frontend/src/components/TeacherGate.tsx` no longer requires Internet Identity sign-in and instead prompts for the teacher password when needed.",
+        "`frontend/src/components/Header.tsx` no longer shows Internet Identity Sign In/Sign Out actions; it reflects teacher password login state (e.g., Sign In / Sign Out) appropriate for the password flow.",
+        "No changes are made to the immutable hook files under `frontend/src/hooks/useInternetIdentity.ts` / `.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, or any files under `frontend/src/components/ui`."
       ]
     },
     {
-      "id": "REQ-4",
-      "text": "Implement student access without Internet Identity: provide a student start flow that collects student name and course name, then allows the student to take an active quiz.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-7"
-        ],
-        "quotes": [
-          "student ko bina Internet Identity sirf apna naam aur course naam likhkar login karna chahiye"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Student can enter Name and Course in a form and proceed without Internet Identity.",
-        "Backend stores the student’s provided Name and Course with the attempt record.",
-        "Input validation prevents empty Name/Course values and shows English error messages."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Enforce the rule that a student can attempt a given quiz only once, based on the student identity formed from the entered name + course (as provided in the student start flow).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-7"
-        ],
-        "quotes": [
-          "ek student ek hi quiz dega"
-        ]
-      },
-      "acceptanceCriteria": [
-        "If the same Name+Course tries to start the same quiz again, the backend prevents creating a new attempt.",
-        "UI informs the student (in English) that they have already attempted the quiz and shows their existing result instead of starting a new attempt.",
-        "Teacher can still view the attempt in the teacher results view."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Implement quiz-taking UI for students: render MCQ questions, allow selecting answers, submit the attempt, and compute/store the result in the backend.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-3",
-          "msg-7"
-        ],
-        "quotes": [
-          "multiple choice question Ho or student apna result dekh ske",
-          "student ... quiz dega"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Student can navigate the quiz and select one option per question.",
-        "On submit, the backend stores selected answers and calculates score and per-question correctness.",
-        "After submission, the student sees their result page with total score and per-question correct/incorrect indicators (English text)."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Provide teacher results dashboard to view all student attempts per quiz, including each student’s name and course and a detailed per-question breakdown showing the student’s selected answer and whether it was correct/incorrect.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-5",
-          "msg-7"
-        ],
-        "quotes": [
-          "result student or teacher dono ko dikhna chiye",
-          "teacher ko har student ka detailed result (har question ka sahi/galat) dekhna chahiye"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Teacher can select a quiz and see a list of student attempts with Name and Course.",
-        "Teacher can open an attempt to see per-question correctness and the student’s chosen option.",
-        "Teacher view is accessible only when signed in with Internet Identity."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Add a coherent, distinct visual theme and layout for the app (teacher and student areas) and apply it consistently using Tailwind + the existing UI component library; avoid a blue/purple primary palette.",
+      "id": "REQ-14",
+      "text": "Replace the student and teacher portal logo with the uploaded DEV Classes logo across the app’s home/portal header branding.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-0"
+          "msg-1"
         ],
         "quotes": [
-          "Use English for any user-facing text in the build request."
+          "Student and teacher dono ka logo"
         ]
       },
       "acceptanceCriteria": [
-        "App has a consistent theme (colors, typography, spacing, components) across all pages.",
-        "Primary palette is not blue/purple.",
-        "UI is clean and readable on mobile and desktop."
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Add generated static image assets to support the theme, place them under frontend/public/assets/generated, and reference them from the UI (e.g., app logo and a subtle background/hero illustration).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-0"
-        ],
-        "quotes": [
-          "Use English for any user-facing text in the build request."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Generated images exist in frontend/public/assets/generated with the specified filenames.",
-        "At least the logo is used in the app header/login/start screens.",
-        "Images are loaded directly as static assets (not served via backend)."
+        "The header logo currently using `/assets/generated/quiz-logo.dim_512x512.png` is replaced to use the new DEV Classes logo asset.",
+        "The updated logo appears consistently in both Student Portal and Teacher Portal header branding.",
+        "All user-facing text related to branding remains in English."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
-    "Do not modify files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
-    "Use English for all user-facing UI text."
+    "Backend must remain a single-actor Motoko canister; keep all logic in `backend/main.mo` and only add `backend/migration.mo` if required for upgrade-safe state changes.",
+    "Do not edit frontend immutable paths: `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, and anything under `frontend/src/components/ui`.",
+    "Use English for any user-facing text."
   ],
   "nonGoals": [
-    "Student authentication via Internet Identity.",
-    "Real-time/live updates of results.",
-    "Payments, subscriptions, or external database integrations.",
-    "Multiple quiz attempts per student for the same quiz."
+    "Adding support for multiple teacher accounts or usernames.",
+    "Integrating third-party authentication providers (only the requested password-based teacher login).",
+    "Changing student login/identity rules (name+course) or quiz attempt rules beyond what is necessary for the teacher auth replacement."
   ],
   "imageRequirements": {
     "required": [
-      "Minimal flat school/quiz logo mark with warm colors (quiz-logo.dim_512x512.png)",
-      "Subtle educational doodle background pattern, light/neutral palette (quiz-background.dim_1920x1080.png)"
+      "DEV Classes logo on white background (dev-classes-logo.dim_512x512.png)"
     ],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [
-      "Use English for all user-facing UI text."
-    ],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

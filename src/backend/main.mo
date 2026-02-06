@@ -1,22 +1,23 @@
-import List "mo:core/List";
 import Map "mo:core/Map";
 import Array "mo:core/Array";
-import Iter "mo:core/Iter";
 import Text "mo:core/Text";
-import P "mo:core/Principal";
+import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
+import Principal "mo:core/Principal";
+import Migration "migration";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
-
   include MixinAuthorization(accessControlState);
 
   type StudentId = Text;
+  var adminPassword : ?Text = ?"admin123"; // Default password on first install
 
   type Teacher = {
-    principal : P.Principal;
+    principal : Principal.Principal;
     name : Text;
   };
 
@@ -39,7 +40,7 @@ actor {
     description : ?Text;
     questions : [Question];
     published : Bool;
-    author : P.Principal;
+    author : Principal.Principal;
   };
 
   type Answer = {
@@ -62,7 +63,7 @@ actor {
   // Persistent storage for quizzes and attempts
   let quizzes = Map.empty<Text, Quiz>();
   let attempts = Map.empty<Text, StudentAttempt>();
-  let teachers = Map.empty<P.Principal, Teacher>();
+  let teachers = Map.empty<Principal.Principal, Teacher>();
 
   func getStudentId(name : Text, course : Text) : StudentId {
     name.trim(#char ' ') # "__" # course.trim(#char ' ');
@@ -72,43 +73,83 @@ actor {
     let id = getStudentId(name, course);
     {
       id;
-      name : Text;
-      course : Text;
+      name;
+      course;
     };
   };
 
-  func ensureAdminOrTeacher(caller : P.Principal) {
-    let role = AccessControl.getUserRole(accessControlState, caller);
-    switch (role) {
-      case (#admin or #user) { () };
-      case (#guest) {
-        Runtime.trap("Unauthorized: Only teachers/admins can perform this action");
+  //// PASSWORD AUTHENTICATION SYSTEM
+
+  public type ChangePasswordRequest = {
+    oldPassword : Text;
+    newPassword : Text;
+  };
+
+  public type ChangePasswordResponse = {
+    success : Bool;
+    message : Text;
+  };
+
+  public type AdminActionResult = {
+    success : Bool;
+    message : Text;
+  };
+
+  public shared ({ caller }) func verifyAdminPassword(password : Text) : async Bool {
+    adminPassword == ?password;
+  };
+
+  public shared ({ caller }) func changePassword(_ : Text, oldPassword : Text, newPassword : Text) : async ChangePasswordResponse {
+    switch (adminPassword) {
+      case (null) {
+        { success = false; message = "Admin password not set" };
+      };
+      case (?currentPassword) {
+        if (oldPassword.isEmpty() or newPassword.isEmpty()) {
+          return { success = false; message = "Please fill out both old and new password" };
+        };
+        if (oldPassword != currentPassword) {
+          return { success = false; message = "Old password is incorrect" };
+        };
+        if (newPassword.size() < 6) {
+          return {
+            success = false;
+            message = "Password must be at least 6 characters";
+          };
+        };
+        adminPassword := ?newPassword;
+        { success = true; message = "Password changed successfully" };
       };
     };
   };
 
-  //// Teacher/Admin Functions
-
-  public shared ({ caller }) func registerTeacher(name : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can register as teachers");
+  func authenticateAdmin(password : Text) : AdminActionResult {
+    switch (adminPassword) {
+      case (null) {
+        { success = false; message = "Admin password not set" };
+      };
+      case (?currentPassword) {
+        if (password == currentPassword) {
+          { success = true; message = "Authentication successful" };
+        } else {
+          { success = false; message = "Invalid password" };
+        };
+      };
     };
-    if (teachers.containsKey(caller)) {
-      Runtime.trap("Teacher already registered");
-    };
-    let teacher : Teacher = {
-      principal = caller;
-      name;
-    };
-    teachers.add(caller, teacher);
   };
 
+  //// ADMIN FUNCTIONALITY
+
   public shared ({ caller }) func createQuiz(
+    password : Text,
     title : Text,
     description : ?Text,
     questions : [Question],
-  ) : async Text {
-    ensureAdminOrTeacher(caller);
+  ) : async ?Text {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+    };
     let quizId = title # " - " # debug_show (questions.size());
     let quiz : Quiz = {
       id = quizId;
@@ -119,88 +160,78 @@ actor {
       author = caller;
     };
     quizzes.add(quizId, quiz);
-    quizId;
+    ?quizId;
   };
 
   public shared ({ caller }) func updateQuiz(
+    password : Text,
     quizId : Text,
     title : Text,
     description : ?Text,
     questions : [Question],
-  ) : async () {
-    ensureAdminOrTeacher(caller);
-    switch (quizzes.get(quizId)) {
-      case (null) {
-        Runtime.trap("Quiz not found");
-      };
-      case (?existingQuiz) {
-        if (existingQuiz.author != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-          Runtime.trap("Unauthorized: You are not the author of this quiz");
-        };
-        let updatedQuiz = {
-          existingQuiz with
-          title;
-          description;
-          questions;
-        };
-        quizzes.add(quizId, updatedQuiz);
-      };
-    };
-  };
-
-  public shared ({ caller }) func publishQuiz(quizId : Text) : async () {
-    ensureAdminOrTeacher(caller);
-    switch (quizzes.get(quizId)) {
-      case (null) {
-        Runtime.trap("Quiz not found");
-      };
-      case (?existingQuiz) {
-        if (existingQuiz.author != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-          Runtime.trap("Unauthorized: You are not the author of this quiz");
-        };
-        let updatedQuiz = {
-          existingQuiz with
-          published = true;
-        };
-        quizzes.add(quizId, updatedQuiz);
-      };
-    };
-  };
-
-  public query ({ caller }) func getTeacherQuizzes() : async [Quiz] {
-    ensureAdminOrTeacher(caller);
-    let iter = quizzes.values();
-    let teacherQuizzes = iter.filter(func(quiz) { quiz.author == caller });
-    teacherQuizzes.toArray();
-  };
-
-  public query ({ caller }) func getQuiz(quizId : Text) : async Quiz {
-    switch (quizzes.get(quizId)) {
-      case (null) {
-        Runtime.trap("Quiz not found");
-      };
-      case (?quiz) {
-        // Teachers/admins can view any quiz
-        // Students can only view published quizzes
-        let role = AccessControl.getUserRole(accessControlState, caller);
-        switch (role) {
-          case (#admin or #user) { quiz };
-          case (#guest) {
-            if (not quiz.published) {
-              Runtime.trap("Unauthorized: Quiz is not published");
-            };
-            quiz;
+  ) : async AdminActionResult {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+      { success = false; message = "Unauthorized: Invalid password" };
+    } else {
+      switch (quizzes.get(quizId)) {
+        case (null) { { success = false; message = "Quiz not found" } };
+        case (?existingQuiz) {
+          let updatedQuiz = {
+            existingQuiz with
+            title;
+            description;
+            questions;
           };
+          quizzes.add(quizId, updatedQuiz);
+          { success = true; message = "Quiz updated successfully" };
         };
       };
     };
   };
 
-  public query ({ caller }) func getQuizResultsStats(quizId : Text) : async {
+  public shared ({ caller }) func publishQuiz(password : Text, quizId : Text) : async AdminActionResult {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+      { success = false; message = "Unauthorized: Invalid password" };
+    } else {
+      switch (quizzes.get(quizId)) {
+        case (null) {
+          { success = false; message = "Quiz not found" };
+        };
+        case (?existingQuiz) {
+          let updatedQuiz = {
+            existingQuiz with
+            published = true;
+          };
+          quizzes.add(quizId, updatedQuiz);
+          { success = true; message = "Quiz published successfully" };
+        };
+      };
+    };
+  };
+
+  public shared ({ caller }) func getTeacherQuizzes(password : Text) : async [Quiz] {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+    };
+    quizzes.values().toArray();
+  };
+
+  public shared ({ caller }) func getQuizResultsStats(
+    password : Text,
+    quizId : Text,
+  ) : async {
     attempts : [StudentAttempt];
     attemptsByQuestion : [([Answer], Text)];
   } {
-    ensureAdminOrTeacher(caller);
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+    };
     let quizAttempts = attempts.values().toArray().filter(
       func(attempt) { attempt.quizId == quizId }
     );
@@ -228,27 +259,90 @@ actor {
     };
   };
 
-  //// Student Functions (No authentication required)
+  public shared ({ caller }) func getAllQuizzes(password : Text) : async [Quiz] {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+    };
+    quizzes.values().toArray();
+  };
+
+  public shared ({ caller }) func getAllAttempts(password : Text) : async [StudentAttempt] {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+    };
+    attempts.values().toArray();
+  };
+
+  public shared ({ caller }) func getAttemptsForStudent(
+    password : Text,
+    name : Text,
+    course : Text,
+  ) : async [StudentAttempt] {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+    };
+    let studentId = getStudentId(name, course);
+    attempts.values().toArray().filter(
+      func(attempt) { attempt.studentId == studentId }
+    );
+  };
+
+  public shared ({ caller }) func getStudentAttemptsByQuizId(
+    password : Text,
+    _quizId : Text,
+  ) : async [StudentAttempt] {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+    };
+    attempts.values().toArray().filter(
+      func(attempt) { attempt.quizId == _quizId }
+    );
+  };
+
+  public shared ({ caller }) func getAttemptsByStudent(password : Text, _quizId : Text) : async [(Text, [Answer])] {
+    let authResult = authenticateAdmin(password);
+    if (not authResult.success) {
+      Runtime.trap(authResult.message);
+    };
+    let attemptsByStudent = attempts.values().toArray().filter(
+      func(attempt) { attempt.quizId == _quizId }
+    );
+
+    attemptsByStudent.map(
+      func(attempt) {
+        (attempt.studentId, attempt.answers);
+      }
+    );
+  };
+
+  //// STUDENT FUNCTIONALITY (No authentication required)
 
   public shared ({ caller }) func loginStudent(name : Text, course : Text) : async Student {
     getOrCreateStudent(name, course);
   };
 
   public query ({ caller }) func getPublishedQuizzes() : async [Quiz] {
-    let unfilteredPublishedQuizzes = quizzes.values().toArray().filter(
+    quizzes.values().toArray().filter(
       func(quiz) { quiz.published }
     );
-    unfilteredPublishedQuizzes;
   };
 
-  public query ({ caller }) func getStudentAttemptsByQuizId(_quizId : Text) : async [StudentAttempt] {
-    ensureAdminOrTeacher(caller);
-    let unfilteredAttempts = attempts.values().toArray().filter(
-      func(attempt) {
-        attempt.quizId == _quizId;
-      }
-    );
-    unfilteredAttempts;
+  public query ({ caller }) func getQuiz(quizId : Text) : async Quiz {
+    switch (quizzes.get(quizId)) {
+      case (null) {
+        Runtime.trap("Quiz not found");
+      };
+      case (?quiz) {
+        if (not quiz.published) {
+          Runtime.trap("Unauthorized: Quiz is not published");
+        };
+        quiz;
+      };
+    };
   };
 
   public query ({ caller }) func hasAttemptedQuiz(studentId : Text, quizId : Text) : async Bool {
@@ -260,7 +354,7 @@ actor {
     studentName : Text,
     course : Text,
     quizId : Text,
-    answers : [(Text, Nat)], // questionId and selectedOptionIndex
+    answers : [(Text, Nat)],
   ) : async {
     score : Nat;
     answers : [Answer];
@@ -320,48 +414,11 @@ actor {
       course;
       score;
       answers = processedAnswers;
-      timestamp = 0;
+      timestamp = Time.now();
     };
 
     attempts.add(attemptId, attempt);
 
     { score; answers = processedAnswers; isRetake = false; attempt };
-  };
-
-  //// System-level query APIs (Teacher/Admin only)
-
-  public query ({ caller }) func getAllQuizzes() : async [Quiz] {
-    ensureAdminOrTeacher(caller);
-    quizzes.values().toArray();
-  };
-
-  public query ({ caller }) func getAllAttempts() : async [StudentAttempt] {
-    ensureAdminOrTeacher(caller);
-    let allAttempts = attempts.values().toArray();
-    allAttempts;
-  };
-
-  public query ({ caller }) func getAttemptsForStudent(name : Text, course : Text) : async [StudentAttempt] {
-    ensureAdminOrTeacher(caller);
-    let studentId = getStudentId(name, course);
-    let unfilteredStudentAttempts = attempts.values().toArray().filter(
-      func(attempt) { attempt.studentId == studentId }
-    );
-    unfilteredStudentAttempts;
-  };
-
-  public query ({ caller }) func getAttemptsByStudent(_quizId : Text) : async [(Text, [Answer])] {
-    ensureAdminOrTeacher(caller);
-    let attemptsByStudent = attempts.values().toArray().filter(
-      func(attempt) { attempt.quizId == _quizId }
-    );
-
-    let results = attemptsByStudent.map(
-      func(attempt) {
-        (attempt.studentId, attempt.answers);
-      }
-    );
-
-    results;
   };
 };

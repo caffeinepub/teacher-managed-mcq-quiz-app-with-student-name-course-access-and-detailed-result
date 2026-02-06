@@ -1,19 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { Quiz, Question, StudentAttempt } from '../backend';
+import { useTeacherPasswordAuth } from './useTeacherPasswordAuth';
+import { Quiz, Question, StudentAttempt, ChangePasswordResponse } from '../backend';
 import { toast } from 'sonner';
 
 // Teacher Quiz Management
 export function useTeacherQuizzes() {
   const { actor, isFetching: actorFetching } = useActor();
+  const { password } = useTeacherPasswordAuth();
 
   return useQuery<Quiz[]>({
     queryKey: ['teacherQuizzes'],
     queryFn: async () => {
-      if (!actor) return [];
-      return actor.getTeacherQuizzes();
+      if (!actor || !password) return [];
+      return actor.getTeacherQuizzes(password);
     },
-    enabled: !!actor && !actorFetching,
+    enabled: !!actor && !actorFetching && !!password,
   });
 }
 
@@ -37,6 +39,7 @@ export function useQuiz(quizId: string | undefined) {
 
 export function useCreateQuiz() {
   const { actor } = useActor();
+  const { password } = useTeacherPasswordAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -50,7 +53,8 @@ export function useCreateQuiz() {
       questions: Question[];
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createQuiz(title, description, questions);
+      if (!password) throw new Error('Not authenticated');
+      return actor.createQuiz(password, title, description, questions);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teacherQuizzes'] });
@@ -64,6 +68,7 @@ export function useCreateQuiz() {
 
 export function useUpdateQuiz() {
   const { actor } = useActor();
+  const { password } = useTeacherPasswordAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -79,7 +84,8 @@ export function useUpdateQuiz() {
       questions: Question[];
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateQuiz(quizId, title, description, questions);
+      if (!password) throw new Error('Not authenticated');
+      return actor.updateQuiz(password, quizId, title, description, questions);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['teacherQuizzes'] });
@@ -94,12 +100,14 @@ export function useUpdateQuiz() {
 
 export function usePublishQuiz() {
   const { actor } = useActor();
+  const { password } = useTeacherPasswordAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (quizId: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.publishQuiz(quizId);
+      if (!password) throw new Error('Not authenticated');
+      return actor.publishQuiz(password, quizId);
     },
     onSuccess: (_, quizId) => {
       queryClient.invalidateQueries({ queryKey: ['teacherQuizzes'] });
@@ -179,13 +187,39 @@ export function useSubmitQuizAttempt() {
 // Teacher Results
 export function useQuizAttempts(quizId: string | undefined) {
   const { actor, isFetching: actorFetching } = useActor();
+  const { password } = useTeacherPasswordAuth();
 
   return useQuery<StudentAttempt[]>({
     queryKey: ['quizAttempts', quizId],
     queryFn: async () => {
-      if (!actor || !quizId) return [];
-      return actor.getStudentAttemptsByQuizId(quizId);
+      if (!actor || !quizId || !password) return [];
+      return actor.getStudentAttemptsByQuizId(password, quizId);
     },
-    enabled: !!actor && !actorFetching && !!quizId,
+    enabled: !!actor && !actorFetching && !!quizId && !!password,
+  });
+}
+
+// Change Password
+export function useChangePassword() {
+  const { actor } = useActor();
+  const { password, updatePassword } = useTeacherPasswordAuth();
+
+  return useMutation({
+    mutationFn: async ({ oldPassword, newPassword }: { oldPassword: string; newPassword: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      if (!password) throw new Error('Not authenticated');
+      return actor.changePassword(password, oldPassword, newPassword);
+    },
+    onSuccess: (response: ChangePasswordResponse, variables) => {
+      if (response.success) {
+        updatePassword(variables.newPassword);
+        toast.success(response.message);
+      } else {
+        toast.error(response.message);
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to change password');
+    },
   });
 }

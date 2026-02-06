@@ -1,17 +1,19 @@
 {
   "frontend/src/index.css": "Global styles with warm amber/orange OKLCH color palette for educational theme, supporting both light and dark modes with consistent design tokens.",
-  "frontend/src/App.tsx": "Main application component managing routing between student and teacher portals with session state and view navigation.",
+  "frontend/src/App.tsx": "Main application component managing routing between student and teacher portals with session state, view navigation, and teacher change password route.",
   "frontend/src/components/AppLayout.tsx": "Shared layout wrapper providing consistent header, footer, and background styling with subtle pattern overlay.",
-  "frontend/src/components/Header.tsx": "Application header with logo, mode indicator, navigation controls, and Internet Identity authentication for teachers.",
+  "frontend/src/components/Header.tsx": "Application header with DEV Classes logo, mode indicator, navigation controls, and password-based teacher authentication controls.",
   "frontend/src/components/Footer.tsx": "Simple footer with copyright notice and caffeine.ai attribution link.",
-  "frontend/src/components/TeacherGate.tsx": "Authorization guard component that enforces teacher authentication and registration before allowing access to teacher portal, with proper event handler wrapping for mutation functions.",
-  "frontend/src/hooks/useTeacherAuth.ts": "Custom hook managing teacher authentication state, role checking, and registration flow using Internet Identity.",
-  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including quiz management, student attempts, and results fetching.",
+  "frontend/src/components/TeacherGate.tsx": "Authorization guard component that enforces teacher password authentication before allowing access to teacher portal, with password verification via backend.",
+  "frontend/src/hooks/useTeacherAuth.ts": "Deprecated hook file kept for backward compatibility during migration to password-based authentication; returns no-op values.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including quiz management, student attempts, results fetching, and password change, with teacher operations requiring password authentication.",
   "frontend/src/pages/student/StudentStart.tsx": "Student entry form collecting name and course with validation before accessing quizzes.",
   "frontend/src/pages/student/ActiveQuizPicker.tsx": "Quiz selection interface displaying all published quizzes available to students.",
   "frontend/src/pages/student/QuizTake.tsx": "Interactive quiz-taking interface with question navigation, answer selection, and submission handling with single-attempt enforcement.",
-  "frontend/src/pages/student/StudentResult.tsx": "Student results view showing total score and per-question breakdown with correct/incorrect indicators.",
-  "frontend/src/pages/teacher/TeacherDashboard.tsx": "Teacher dashboard listing all created quizzes with options to create, edit, publish, and view results.",
+  "frontend/src/pages/student/StudentResult.tsx": "Student result view showing quiz completion status; displays simplified result since students cannot fetch detailed attempt data from backend without teacher authentication.",
+  "frontend/src/pages/teacher/TeacherDashboard.tsx": "Teacher dashboard listing all created quizzes with options to create, edit, publish, view results, and change password.",
   "frontend/src/pages/teacher/QuizEditor.tsx": "Comprehensive quiz editor for creating and modifying quizzes with multiple-choice questions and dynamic option management.",
-  "frontend/src/pages/teacher/TeacherResults.tsx": "Teacher results dashboard showing all student attempts per quiz with detailed per-question breakdown in modal view."
+  "frontend/src/pages/teacher/TeacherResults.tsx": "Teacher results dashboard showing all student attempts per quiz with detailed per-question breakdown in modal view.",
+  "frontend/src/hooks/useTeacherPasswordAuth.ts": "Custom hook managing teacher password-based authentication state using sessionStorage, providing login, logout, and password update functionality.",
+  "frontend/src/pages/teacher/ChangePassword.tsx": "Teacher change password screen with old and new password fields, validation, and success handling that updates stored password."
 }
