@@ -1,2 +1,3 @@
-# teacher-managed-mcq-quiz-app-with-student-name-course-access-and-detailed-result
-Exported from Caffeine project: Teacher-managed MCQ Quiz App with Student Name/Course Access and Detailed Results
+## Teacher-managed MCQ Quiz App with Student Name/Course Access and Detailed Results
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`

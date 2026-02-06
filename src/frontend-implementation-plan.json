@@ -1,0 +1,261 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Teacher-managed MCQ Quiz App (Frontend)",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Implement teacher sign-in/out with Internet Identity and gate all teacher/admin UI behind authenticated + authorized teacher role, including clear signed-in state.",
+      "acceptanceCriteria": [
+        "Teacher can sign in/out using Internet Identity in the UI.",
+        "Backend rejects admin/teacher mutations and teacher-only queries when caller is not authenticated.",
+        "UI clearly indicates teacher signed-in state and provides a sign-out action."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "create",
+          "description": "Create the main app shell that separates Student and Teacher areas; use the authorization component’s Internet Identity flow (via existing useInternetIdentity hook) for teacher sign-in/out, show signed-in state, and ensure teacher/admin views render only when authorized. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useTeacherAuth.ts",
+          "operation": "create",
+          "description": "Add a teacher-auth hook that composes useInternetIdentity + useActor and queries backend role (e.g., getCallerUserRole/isCallerAdmin) to compute teacher authorization and expose helper actions (e.g., registerTeacher for first-time profile). Handle unauthorized errors gracefully. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/TeacherGate.tsx",
+          "operation": "create",
+          "description": "Create a guard/wrapper component that renders an Access Denied / Sign In prompt when teacher is not authenticated/authorized, otherwise renders teacher/admin children. Ensure English UI text and clear call-to-action to sign in/out. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useActor.ts",
+          "operation": "modify",
+          "description": "Ensure logout clears cached app data by coordinating with React Query (queryClient.clear) in the UI flow; keep actor recreation behavior consistent when identity changes."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "create",
+          "description": "Add a shared header showing app logo, current area (Student/Teacher), and teacher sign-in/out controls using the authorization component’s guidance (clear cached queries on logout). Use the existing UI component library (shadcn-ui) for buttons/menus. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Build teacher/admin UI for managing quizzes and questions (create/edit quiz metadata, add/edit/delete questions, publish/activate quiz), with all UI text in English.",
+      "acceptanceCriteria": [
+        "Teacher can create and edit a quiz from the browser UI.",
+        "Teacher can add/edit/delete MCQ questions and set the correct answer.",
+        "Teacher can mark a quiz as active/available to students.",
+        "All user-facing UI text is in English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/teacher/TeacherDashboard.tsx",
+          "operation": "create",
+          "description": "Create the teacher dashboard view: list teacher quizzes (getTeacherQuizzes), show create-new quiz entry, and allow navigating into quiz editing. Use the existing UI component library (shadcn-ui) for layout (cards/tables/forms). Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/teacher/QuizEditor.tsx",
+          "operation": "create",
+          "description": "Create a quiz editor view for quiz title/description, question list, and question editing; enforce UI validation for 4+ options and exactly one selected correct answer before saving. Persist changes via backend capabilities (createQuiz/updateQuiz) and publish via publishQuiz. Use shadcn-ui form inputs/dialogs. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useTeacherQuizzes.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for teacher quiz list + quiz detail and mutations (create/update/publish), including optimistic/refresh behavior and English error handling."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wire teacher dashboard and quiz editor into the app navigation/state so they are reachable and not orphaned; wrap all teacher routes/views with TeacherGate."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Implement student start flow without Internet Identity: collect Name and Course, validate, and proceed into active quiz selection/taking while associating attempt with provided identity.",
+      "acceptanceCriteria": [
+        "Student can enter Name and Course in a form and proceed without Internet Identity.",
+        "Backend stores the student’s provided Name and Course with the attempt record.",
+        "Input validation prevents empty Name/Course values and shows English error messages."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/student/StudentStart.tsx",
+          "operation": "create",
+          "description": "Create the student start screen with Name and Course form, English validation messages, and a continue action that calls loginStudent and stores the resulting student info locally for the session (e.g., in memory + localStorage). Use shadcn-ui inputs/buttons/cards. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useStudentSession.ts",
+          "operation": "create",
+          "description": "Add a lightweight student session hook to store/retrieve Name/Course (and returned student id if needed) and provide a clear/reset action for starting over, without requiring Internet Identity."
+        },
+        {
+          "path": "frontend/src/pages/student/ActiveQuizPicker.tsx",
+          "operation": "create",
+          "description": "Create a student quiz selection view that loads published/active quizzes (getPublishedQuizzes), displays title/description, and lets the student choose a quiz to start. Use shadcn-ui list/card components. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wire the student start flow and active quiz picker into the main navigation/state so students can complete the flow without teacher login."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Enforce single attempt per quiz per student (Name+Course identity): prevent retakes and show the existing results instead.",
+      "acceptanceCriteria": [
+        "If the same Name+Course tries to start the same quiz again, the backend prevents creating a new attempt.",
+        "UI informs the student (in English) that they have already attempted the quiz and shows their existing result instead of starting a new attempt.",
+        "Teacher can still view the attempt in the teacher results view."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/student/QuizTake.tsx",
+          "operation": "create",
+          "description": "Implement student quiz-taking screen that, on quiz load/start, checks single-attempt state using backend capability (hasAttemptedQuiz and/or submitQuizAttempt response isRetake). If already attempted, show English message and route to the existing result view (via getAttemptsForStudent and quizId filtering)."
+        },
+        {
+          "path": "frontend/src/pages/student/StudentResult.tsx",
+          "operation": "create",
+          "description": "Create a student result view that can render an existing attempt for the selected quiz, including per-question correctness and selected option, and clearly indicates when this is a previously submitted attempt (no retake allowed). Use shadcn-ui badges/tables/cards. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useStudentAttempts.ts",
+          "operation": "create",
+          "description": "Add React Query hooks to fetch attempts for the current student (getAttemptsForStudent) and helpers to find an attempt by quizId; include English-friendly error mapping for authorization/trap messages."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wire navigation so starting a quiz routes either into QuizTake (first attempt) or directly into StudentResult (existing attempt)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Implement student quiz-taking UI: render MCQs, select one option per question, submit, and show computed/stored results with per-question indicators.",
+      "acceptanceCriteria": [
+        "Student can navigate the quiz and select one option per question.",
+        "On submit, the backend stores selected answers and calculates score and per-question correctness.",
+        "After submission, the student sees their result page with total score and per-question correct/incorrect indicators (English text)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/student/QuizTake.tsx",
+          "operation": "modify",
+          "description": "Render quiz questions/options from getQuiz, enforce single selection per question, add basic navigation (previous/next or scroll), and submit selected answers using submitQuizAttempt. After submit, transition to StudentResult using the returned attempt/answers/score."
+        },
+        {
+          "path": "frontend/src/pages/student/StudentResult.tsx",
+          "operation": "modify",
+          "description": "Render total score and per-question breakdown by joining attempt answers with quiz questions/options (selected option text + correctness). Ensure English labels and mobile-friendly layout using shadcn-ui components. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQuizData.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for loading quiz detail (getQuiz) and published quizzes, plus a submit mutation wrapper for submitQuizAttempt with consistent error handling."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Ensure StudentResult is reachable after successful submission and that refresh/reload can rehydrate state by re-fetching quiz + attempts."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Provide teacher results dashboard: view all student attempts per quiz with Name/Course and detailed per-question breakdown (selected answer + correctness), restricted to signed-in teachers.",
+      "acceptanceCriteria": [
+        "Teacher can select a quiz and see a list of student attempts with Name and Course.",
+        "Teacher can open an attempt to see per-question correctness and the student’s chosen option.",
+        "Teacher view is accessible only when signed in with Internet Identity."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/teacher/TeacherResults.tsx",
+          "operation": "create",
+          "description": "Create a teacher results dashboard that lists teacher quizzes, allows selecting a quiz, loads attempts for that quiz (getStudentAttemptsByQuizId or getQuizResultsStats), and shows attempts with student name/course and score. Use shadcn-ui tables/dialogs. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/teacher/AttemptDetail.tsx",
+          "operation": "create",
+          "description": "Create an attempt detail view (or modal) that shows per-question breakdown: question text, student selected option, correct option, and correct/incorrect indicator, by joining attempt answers with quiz questions from getQuiz."
+        },
+        {
+          "path": "frontend/src/hooks/useTeacherResults.ts",
+          "operation": "create",
+          "description": "Add React Query hooks for loading attempts per quiz and caching quiz detail needed for per-question breakdown; normalize/format bigint values for UI display (e.g., score)."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wire TeacherResults and AttemptDetail into teacher navigation and ensure they are wrapped by TeacherGate so they are inaccessible when not signed in/authorized."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Apply a coherent warm-themed visual design across student and teacher areas using Tailwind + existing UI library, avoiding a blue/purple primary palette.",
+      "acceptanceCriteria": [
+        "App has a consistent theme (colors, typography, spacing, components) across all pages.",
+        "Primary palette is not blue/purple.",
+        "UI is clean and readable on mobile and desktop."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/index.css",
+          "operation": "create",
+          "description": "Define the app’s global theme tokens/CSS variables and base styles to produce a warm primary palette (e.g., amber/green/neutral) and consistent typography/spacing; avoid blue/purple primaries and ensure responsive defaults."
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Adjust Tailwind theme extension (if needed) to support the warm palette and any additional semantic colors while keeping compatibility with the existing shadcn-ui token approach."
+        },
+        {
+          "path": "frontend/src/components/AppLayout.tsx",
+          "operation": "create",
+          "description": "Create a shared layout component applying consistent page padding, max width, background treatment, and section styling for both teacher and student areas using Tailwind + shadcn-ui building blocks. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Wrap all screens in AppLayout to ensure consistent look/feel and mobile/desktop readability across the entire app."
+        }
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "summary": "Add and reference generated static image assets (logo + subtle background) under frontend/public/assets/generated to support the theme.",
+      "acceptanceCriteria": [
+        "Generated images exist in frontend/public/assets/generated with the specified filenames.",
+        "At least the logo is used in the app header/login/start screens.",
+        "Images are loaded directly as static assets (not served via backend)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/public/assets/generated/quiz-logo.dim_512x512.png",
+          "operation": "create",
+          "description": "Add the generated static logo image asset at frontend/public/assets/generated/quiz-logo.dim_512x512.png."
+        },
+        {
+          "path": "frontend/public/assets/generated/quiz-background.dim_1920x1080.png",
+          "operation": "create",
+          "description": "Add the generated subtle background pattern image asset at frontend/public/assets/generated/quiz-background.dim_1920x1080.png."
+        },
+        {
+          "path": "frontend/src/components/Header.tsx",
+          "operation": "modify",
+          "description": "Reference and render the static logo asset from frontend/public/assets/generated/quiz-logo.dim_512x512.png in the header and key entry screens (Teacher sign-in area and Student start)."
+        },
+        {
+          "path": "frontend/src/components/AppLayout.tsx",
+          "operation": "modify",
+          "description": "Reference the static background image frontend/public/assets/generated/quiz-background.dim_1920x1080.png as a subtle page background/decoration (ensure readability and sufficient contrast)."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-06T02:07:23.551Z",
+  "summary": "Diff adds a new Motoko backend actor and a full React/Tailwind frontend with student start flow, quiz taking/results, and teacher portal gated by Internet Identity. Several key requirements cannot be confirmed due to backend truncation, and some requirements appear unimplemented or violated based on visible frontend usage (notably results access control and MCQ constraints).",
+  "missing_requirements": [
+    {
+      "id": "REQ-2",
+      "requirement": "Enforce MCQ questions with 4+ options and exactly one correct answer.",
+      "reason": "Teacher UI validation allows questions with as few as 2 options (and does not show enforcement of exactly one correct option). Backend-side enforcement is not visible in the truncated backend excerpt, so enforcement cannot be confirmed.",
+      "evidence": [
+        "frontend/src/pages/teacher/QuizEditor.tsx (validates q.options.length < 2)",
+        "backend/main.mo (no visible validation logic in shown portion)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Full CRUD for quizzes and questions (create/read/update/delete).",
+      "reason": "Only createQuiz/updateQuiz/publishQuiz are visible in the truncated backend excerpt. Delete operations and question-level CRUD endpoints are not evidenced in the shown diff summary, so full CRUD cannot be verified.",
+      "evidence": [
+        "backend/main.mo (shows registerTeacher/createQuiz/updateQuiz/publishQuiz; rest truncated)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Quizzes and questions persist across reloads and canister upgrades (standard persistence approach).",
+      "reason": "Visible backend storage uses in-memory Maps (Map.empty) with no stable variables or preupgrade/postupgrade logic shown. Because the file is truncated, persistence might exist later, but it is not evidenced in the visible portion.",
+      "evidence": [
+        "backend/main.mo (quizzes/attempts/teachers defined as let quizzes = Map.empty..., etc.)"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Restrict teacher-only queries (e.g., viewing all student results) to authenticated teachers only; backend rejects when caller not authenticated.",
+      "reason": "Frontend student result page calls an actor method named getStudentAttemptsByQuizId and then filters client-side, which would require fetching all attempts for a quiz unless the backend already filters by caller/student. No evidence is shown that the backend enforces teacher-only access for quiz-wide attempts, so the teacher-only restriction cannot be verified and appears at risk.",
+      "evidence": [
+        "frontend/src/pages/student/StudentResult.tsx (calls actor.getStudentAttemptsByQuizId(quizId) then filters locally by studentId)",
+        "frontend/src/pages/teacher/TeacherResults.tsx (uses useQuizAttempts(selectedQuizId))",
+        "backend/main.mo (access control exists but relevant query implementations are truncated)"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Backend prevents creating a new attempt when the same Name+Course tries the same quiz again.",
+      "reason": "Frontend checks hasAttempted and redirects, but backend-side enforcement is not visible in the truncated backend excerpt, so the required backend prevention cannot be confirmed.",
+      "evidence": [
+        "frontend/src/pages/student/QuizTake.tsx (uses useHasAttemptedQuiz and redirects)",
+        "backend/main.mo (attempt creation/check logic not visible in shown portion)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Admin-token/secret-based access control initialization via URL parameter (caffeineAdminToken) and actor._initializeAccessControlWithSecret.",
+      "reason": "BuildRequest does not mention any admin secret token bootstrap mechanism; it only requests teacher authentication via Internet Identity.",
+      "evidence": [
+        "frontend/src/hooks/useActor.ts (getSecretParameter('caffeineAdminToken') and actor._initializeAccessControlWithSecret(adminToken))",
+        "frontend/src/utils/urlParams.ts (URL parameter utilities)"
+      ]
+    },
+    {
+      "description": "Teacher self-registration flow (registerTeacher) after signing in.",
+      "reason": "BuildRequest requires teacher authentication via Internet Identity and restricting teacher actions, but does not specify an additional teacher registration step/workflow.",
+      "evidence": [
+        "backend/main.mo (public shared func registerTeacher)",
+        "frontend/src/components/TeacherGate.tsx (registration UI)",
+        "frontend/src/hooks/useTeacherAuth.ts (calls actor.registerTeacher)"
+      ]
+    },
+    {
+      "description": "Footer branding/link to caffeine.ai.",
+      "reason": "Not requested by the BuildRequest.",
+      "evidence": [
+        "frontend/src/components/Footer.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "all_files_summary.json",
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.css",
+    "frontend/index.html",
+    "frontend/src/App.tsx",
+    "frontend/src/components/AppLayout.tsx",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/Header.tsx",
+    "frontend/src/components/TeacherGate.tsx",
+    "frontend/src/hooks/useActor.ts",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/hooks/useTeacherAuth.ts",
+    "frontend/src/index.css",
+    "frontend/src/main.tsx",
+    "frontend/src/pages/student/ActiveQuizPicker.tsx",
+    "frontend/src/pages/student/QuizTake.tsx",
+    "frontend/src/pages/student/StudentResult.tsx",
+    "frontend/src/pages/student/StudentStart.tsx",
+    "frontend/src/pages/teacher/QuizEditor.tsx",
+    "frontend/src/pages/teacher/TeacherDashboard.tsx",
+    "frontend/src/pages/teacher/TeacherResults.tsx",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}

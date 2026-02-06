@@ -1,0 +1,174 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-implement-teacher-authentication-using-internet-identity-and-restrict-all-teacher-admin-actions-create-edit-quizzes-view-all-student-results-to-authenticated-teachers-only",
+      "featureTitle": "Implement teacher authentication using Internet Identity and restrict all teacher/admin actions (create/edit quizzes, view all student results) to authenticated teachers only.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/Header.tsx",
+        "frontend/src/components/TeacherGate.tsx",
+        "frontend/src/hooks/useActor.ts",
+        "frontend/src/hooks/useTeacherAuth.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-build-teacher-admin-ui-to-manage-quizzes-and-questions-list-quizzes-create-a-new-quiz-edit-quiz-metadata-add-edit-delete-mcq-questions-and-publish-activate-a-quiz-for-students-to-take",
+      "featureTitle": "Build teacher/admin UI to manage quizzes and questions: list quizzes, create a new quiz, edit quiz metadata, add/edit/delete MCQ questions, and publish/activate a quiz for students to take.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/teacher/QuizEditor.tsx",
+        "frontend/src/pages/teacher/TeacherDashboard.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-student-access-without-internet-identity-provide-a-student-start-flow-that-collects-student-name-and-course-name-then-allows-the-student-to-take-an-active-quiz",
+      "featureTitle": "Implement student access without Internet Identity: provide a student start flow that collects student name and course name, then allows the student to take an active quiz.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/student/ActiveQuizPicker.tsx",
+        "frontend/src/pages/student/StudentStart.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-enforce-the-rule-that-a-student-can-attempt-a-given-quiz-only-once-based-on-the-student-identity-formed-from-the-entered-name-course-as-provided-in-the-student-start-flow",
+      "featureTitle": "Enforce the rule that a student can attempt a given quiz only once, based on the student identity formed from the entered name + course (as provided in the student start flow).",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/student/QuizTake.tsx",
+        "frontend/src/pages/student/StudentResult.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-quiz-taking-ui-for-students-render-mcq-questions-allow-selecting-answers-submit-the-attempt-and-compute-store-the-result-in-the-backend",
+      "featureTitle": "Implement quiz-taking UI for students: render MCQ questions, allow selecting answers, submit the attempt, and compute/store the result in the backend.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/student/QuizTake.tsx",
+        "frontend/src/pages/student/StudentResult.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-provide-teacher-results-dashboard-to-view-all-student-attempts-per-quiz-including-each-student-s-name-and-course-and-a-detailed-per-question-breakdown-showing-the-student-s-selected-answer-and-whether-it-was-correct-incorrect",
+      "featureTitle": "Provide teacher results dashboard to view all student attempts per quiz, including each student’s name and course and a detailed per-question breakdown showing the student’s selected answer and whether it was correct/incorrect.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/pages/teacher/TeacherResults.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-coherent-distinct-visual-theme-and-layout-for-the-app-teacher-and-student-areas-and-apply-it-consistently-using-tailwind-the-existing-ui-component-library-avoid-a-blue-purple-primary-palette",
+      "featureTitle": "Add a coherent, distinct visual theme and layout for the app (teacher and student areas) and apply it consistently using Tailwind + the existing UI component library; avoid a blue/purple primary palette.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/AppLayout.tsx",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-generated-static-image-assets-to-support-the-theme-place-them-under-frontend-public-assets-generated-and-reference-them-from-the-ui-e-g-app-logo-and-a-subtle-background-hero-illustration",
+      "featureTitle": "Add generated static image assets to support the theme, place them under frontend/public/assets/generated, and reference them from the UI (e.g., app logo and a subtle background/hero illustration).",
+      "files": [
+        "frontend/src/components/AppLayout.tsx",
+        "frontend/src/components/Header.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

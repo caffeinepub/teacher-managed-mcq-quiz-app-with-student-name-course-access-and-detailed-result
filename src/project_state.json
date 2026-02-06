@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Quiz app for a teacher: teacher logs in to manage quizzes/MCQs; students enter name and course to take a quiz (no Internet Identity); each student can attempt a quiz once; results visible to both students and teacher with per-question correctness for teacher.",
+  "architectural_notes": [
+    "Teacher uses Internet Identity for authentication; students do not use Internet Identity and instead provide name + course."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Minimal flat school/quiz logo mark with warm colors (quiz-logo.dim_512x512.png)\n- Subtle educational doodle background pattern, light/neutral palette (quiz-background.dim_1920x1080.png)",
+  "existing_features": [
+    {
+      "id": "feature-implement-teacher-authentication-using-internet-identity-and-restrict-all-teacher-admin-actions-create-edit-quizzes-view-all-student-results-to-authenticated-teachers-only",
+      "title": "Implement teacher authentication using Internet Identity and restrict all teacher/admin actions (create/edit quizzes, view all student results) to authenticated teachers only.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-build-teacher-admin-ui-to-manage-quizzes-and-questions-list-quizzes-create-a-new-quiz-edit-quiz-metadata-add-edit-delete-mcq-questions-and-publish-activate-a-quiz-for-students-to-take",
+      "title": "Build teacher/admin UI to manage quizzes and questions: list quizzes, create a new quiz, edit quiz metadata, add/edit/delete MCQ questions, and publish/activate a quiz for students to take.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-student-access-without-internet-identity-provide-a-student-start-flow-that-collects-student-name-and-course-name-then-allows-the-student-to-take-an-active-quiz",
+      "title": "Implement student access without Internet Identity: provide a student start flow that collects student name and course name, then allows the student to take an active quiz.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-enforce-the-rule-that-a-student-can-attempt-a-given-quiz-only-once-based-on-the-student-identity-formed-from-the-entered-name-course-as-provided-in-the-student-start-flow",
+      "title": "Enforce the rule that a student can attempt a given quiz only once, based on the student identity formed from the entered name + course (as provided in the student start flow).",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-quiz-taking-ui-for-students-render-mcq-questions-allow-selecting-answers-submit-the-attempt-and-compute-store-the-result-in-the-backend",
+      "title": "Implement quiz-taking UI for students: render MCQ questions, allow selecting answers, submit the attempt, and compute/store the result in the backend.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-provide-teacher-results-dashboard-to-view-all-student-attempts-per-quiz-including-each-student-s-name-and-course-and-a-detailed-per-question-breakdown-showing-the-student-s-selected-answer-and-whether-it-was-correct-incorrect",
+      "title": "Provide teacher results dashboard to view all student attempts per quiz, including each student’s name and course and a detailed per-question breakdown showing the student’s selected answer and whether it was correct/incorrect.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-coherent-distinct-visual-theme-and-layout-for-the-app-teacher-and-student-areas-and-apply-it-consistently-using-tailwind-the-existing-ui-component-library-avoid-a-blue-purple-primary-palette",
+      "title": "Add a coherent, distinct visual theme and layout for the app (teacher and student areas) and apply it consistently using Tailwind + the existing UI component library; avoid a blue/purple primary palette.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-generated-static-image-assets-to-support-the-theme-place-them-under-frontend-public-assets-generated-and-reference-them-from-the-ui-e-g-app-logo-and-a-subtle-background-hero-illustration",
+      "title": "Add generated static image assets to support the theme, place them under frontend/public/assets/generated, and reference them from the UI (e.g., app logo and a subtle background/hero illustration).",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Teacher backend login to create/add/modify quizzes and MCQ questions",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Student access without Internet Identity: enter name and course to start quiz",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Enforce single attempt per student per quiz",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Results viewing: student sees own result; teacher sees each student's detailed per-question correct/incorrect breakdown",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Teacher authentication via Internet Identity",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Create backend data models and APIs to support quiz authoring: quizzes with title and optional description, and multiple-choice questions with 4+ options and exactly one correct answer, with full CRUD for teachers.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Teacher-managed MCQ Quiz App with Student Name/Course Access and Detailed Results",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
